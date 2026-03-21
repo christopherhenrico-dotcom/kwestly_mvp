@@ -11,7 +11,10 @@ const Landing: FC = () => {
     <div className="min-h-screen bg-background">
       {/* Nav */}
       <nav className="h-14 border-b border-border flex items-center px-6 justify-between">
-        <span className="font-display font-bold text-lg text-primary tracking-tighter">KWESTLY</span>
+        <span className="font-display font-bold text-lg text-primary tracking-tighter">
+          KWESTLY
+          <img src="/logo_nobg.png" alt="Kwestly" className="h-6 w-auto inline ml-2" />
+        </span>
         <button
           onClick={() => navigate('/dashboard')}
           className="font-mono text-sm text-primary hover:text-foreground transition-colors"
@@ -31,7 +34,8 @@ const Landing: FC = () => {
           <h1 className="font-display text-5xl md:text-7xl font-bold uppercase tracking-tighter text-foreground mb-6">
             Ship Code.{' '}
             <span className="text-primary text-glow-cyan">Get Paid.</span>
-            <br />No Bullshit.
+            <br />
+            No Bullshit.
           </h1>
           <p className="font-mono text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
             The first P2P Side Quest platform. Earn $100 before lunch. No resumes. No interviews. Just execution.
@@ -107,7 +111,7 @@ const Landing: FC = () => {
           </h2>
           <p className="font-mono text-sm text-muted-foreground text-center mb-10">Connect to accept</p>
           <div className="grid md:grid-cols-3 gap-6">
-            {MOCK_QUESTS.slice(0, 3).map((quest, i) => (
+            {displayQuests.slice(0, 3).map((quest, i) => (
               <QuestCard key={quest.id} quest={quest} index={i} />
             ))}
           </div>
