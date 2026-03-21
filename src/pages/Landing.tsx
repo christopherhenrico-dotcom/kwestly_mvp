@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Github, Code2, Wallet, Zap } from 'lucide-react';
 import QuestCard from '@/components/quest/QuestCard';
-import { MOCK_QUESTS } from '@/data/mockData';
 
 const Landing: FC = () => {
   const navigate = useNavigate();
@@ -118,7 +117,7 @@ const Landing: FC = () => {
       {/* Footer */}
       <footer className="border-t border-border py-8 px-6">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
-          <span className="font-display font-bold text-sm text-muted-foreground">KWESTLY © 2026</span>
+          <img src="/logo_nobg.png" alt="Kwestly" className="h-6 w-auto" />
           <div className="flex gap-6 font-mono text-xs text-muted-foreground">
             <a href="#" className="hover:text-foreground transition-colors">Twitter</a>
             <a href="#" className="hover:text-foreground transition-colors">Discord</a>

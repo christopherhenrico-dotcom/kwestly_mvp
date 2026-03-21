@@ -2,7 +2,6 @@ import { FC, useState } from 'react';
 import TopNav from '@/components/layout/TopNav';
 import AppSidebar from '@/components/layout/AppSidebar';
 import { useQuestStore } from '@/stores/appStore';
-import { MOCK_QUESTS } from '@/data/mockData';
 
 const Admin: FC = () => {
   const [tab, setTab] = useState<'post' | 'review'>('post');

@@ -7,7 +7,6 @@ import TopNav from '@/components/layout/TopNav';
 import DifficultyBadge from '@/components/quest/DifficultyBadge';
 import CountdownTimer from '@/components/quest/CountdownTimer';
 import { useQuestStore } from '@/stores/appStore';
-import { MOCK_QUESTS } from '@/data/mockData';
 
 const QuestDetail: FC = () => {
   const { id } = useParams();

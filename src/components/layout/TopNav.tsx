@@ -16,7 +16,7 @@ const TopNav: FC = () => {
     <header className="h-14 border-b border-border bg-card/80 backdrop-blur-sm flex items-center px-4 gap-4 sticky top-0 z-50">
       {/* Logo */}
       <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-        <span className="font-display font-bold text-lg text-primary tracking-tighter">KWESTLY</span>
+        <img src="/logo_nobg.png" alt="Kwestly" className="h-8 w-auto" />
       </div>
 
       {/* Search */}
