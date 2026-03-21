@@ -1,4 +1,4 @@
-/// <reference path="../pb_data/types.d.ts" />
+/// <reference path="/workspaces/kwestly_mvp/kwestly-backend/pb_data/types.d.ts" />
 
 onRecordBeforeAuthWithOAuth2Request((e) => {
   // This fires BEFORE OAuth redirect

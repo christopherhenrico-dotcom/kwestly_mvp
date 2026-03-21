@@ -1,0 +1,5 @@
+[phases.setup]
+nixPkgs = ["glibc"]
+
+[start]
+cmd = "./pocketbase serve --http=0.0.0.0:$PORT"

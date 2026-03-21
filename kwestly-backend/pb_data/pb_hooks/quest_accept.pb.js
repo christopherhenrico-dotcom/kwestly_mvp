@@ -1,4 +1,4 @@
-/// <reference path="../pb_data/types.d.ts" />
+/// <reference path="/workspaces/kwestly_mvp/kwestly-backend/pb_data/types.d.ts" />
 
 routerAdd("POST", "/api/quests/:id/accept", (c) => {
   const questId = c.pathParam("id");

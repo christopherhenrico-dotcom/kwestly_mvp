@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# PocketBase (but keep migrations and hooks)
+pb_data/pocketbase
+pb_data/pancake
+pb_data/vendor
+pb_data/*.db
+pb_data/*.wal
+pb_data/*.shm
+!pb_data/pb_migrations/
+!pb_data/pb_hooks/
+
+# Railway
+.railway/
+# PocketBase exclusions
+!pb_data/pb_migrations/
+!pb_data/pb_hooks/
