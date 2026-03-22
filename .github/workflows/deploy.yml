@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy to Cloudflare Pages
 
 on:
   push:
@@ -7,41 +7,35 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+      
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: "npm"
+      
       - name: Install dependencies
         run: npm ci
+      
       - name: Build
         env:
           VITE_POCKETBASE_URL: https://beneficial-strength-production-7d7b.up.railway.app
           VITE_BASE_CHAIN_ID: 84532
           VITE_BASE_RPC_URL: https://sepolia.base.org
         run: npm run build
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
         with:
-          path: ./dist
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: kwestly
+          directory: dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
