@@ -4,16 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { X, Zap, Wallet, Github, Check, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
-declare global {
-  interface Window {
-    ethereum?: {
-      request: (args: { method: string; params?: string[] }) => Promise<string[]>;
-      on: (event: string, callback: (...args: unknown[]) => void) => void;
-      removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
-    };
-  }
-}
-
 interface OnboardingProps {
   onComplete: () => void;
 }
