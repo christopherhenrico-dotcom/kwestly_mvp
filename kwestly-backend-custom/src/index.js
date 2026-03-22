@@ -8,7 +8,7 @@ import submissionRoutes from './routes/submissions.js';
 import transactionRoutes from './routes/transactions.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 8080;
 
 // Initialize database
 const db = initDb();
@@ -36,6 +36,11 @@ app.use('/api/transactions', transactionRoutes);
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Root route
+app.get('/', (req, res) => {
+  res.json({ name: 'Kwestly API', version: '1.0.0' });
 });
 
 // Error handler
