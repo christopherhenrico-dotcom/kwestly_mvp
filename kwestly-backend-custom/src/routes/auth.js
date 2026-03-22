@@ -45,7 +45,7 @@ router.get('/github', (req, res) => {
   
   const url = new URL('https://github.com/login/oauth/authorize');
   url.searchParams.set('client_id', GITHUB_CLIENT_ID);
-  url.searchParams.set('redirect_uri', `${API_URL}/auth/github/callback`);
+  url.searchParams.set('redirect_uri', `${API_URL}/api/auth/github/callback`);
   url.searchParams.set('scope', 'read:user user:email');
   url.searchParams.set('state', state);
   
@@ -71,7 +71,7 @@ router.get('/github/callback', async (req, res) => {
         client_id: GITHUB_CLIENT_ID,
         client_secret: GITHUB_CLIENT_SECRET,
         code,
-        redirect_uri: `${API_URL}/auth/github/callback`
+        redirect_uri: `${API_URL}/api/auth/github/callback`
       })
     });
     const tokenData = await tokenRes.json();
