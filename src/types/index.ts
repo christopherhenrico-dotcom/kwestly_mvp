@@ -1,26 +1,25 @@
-// User type based on PocketBase users collection
 export interface User {
   id: string;
-  username: string;
   email: string;
   emailVisibility?: boolean;
+  name?: string;
   avatar?: string;
-  executionScore?: number;
-  questsCompleted?: number;
-  successRate?: number;
-  totalEarned?: number;
-  walletBalance?: number;
+  avatar_url?: string;
+  github_id?: string;
+  github_username?: string;
+  execution_score?: number;
+  total_earned?: number;
+  quests_completed?: number;
+  rank?: 'bronze' | 'silver' | 'gold' | 'elite';
+  wallet_address?: string;
+  last_score_update?: string;
   created?: string;
   updated?: string;
 }
 
-// Quest difficulty levels
 export type QuestDifficulty = 'easy' | 'medium' | 'hard' | 'elite';
-
-// Quest status
 export type QuestStatus = 'open' | 'active' | 'submitted' | 'completed' | 'failed' | 'cancelled';
 
-// Quest type based on backend schema
 export interface Quest {
   id: string;
   title: string;
@@ -47,7 +46,6 @@ export interface Quest {
   };
 }
 
-// Submission type
 export type SubmissionType = 'pr_link' | 'file';
 export type SubmissionStatus = 'pending' | 'approved' | 'rejected';
 
@@ -73,24 +71,22 @@ export interface Submission {
   };
 }
 
-// Transaction type
 export interface Transaction {
   id: string;
-  user_id: string;
   quest_id?: string;
+  worker_id: string;
   amount: number;
-  type: 'deposit' | 'withdrawal' | 'quest_payment' | 'quest_earning' | 'fee';
-  status: 'pending' | 'completed' | 'failed';
   tx_hash?: string;
+  status: 'pending' | 'confirmed' | 'failed';
+  created_at?: string;
   created?: string;
   updated?: string;
   expand?: {
-    user_id?: User;
     quest_id?: Quest;
+    worker_id?: User;
   };
 }
 
-// Auth response
 export interface AuthResponse {
   token: string;
   record: User;
@@ -100,7 +96,6 @@ export interface AuthResponse {
   };
 }
 
-// OAuth provider
 export interface OAuthProvider {
   name: string;
   state: string;

@@ -84,7 +84,7 @@ const Leaderboard: FC = () => {
                     #{i + 1}
                   </span>
                   <span className="col-span-2 text-foreground font-medium">
-                    {entry.user.username || entry.user.email?.split('@')[0] || 'Anonymous'}
+                    {entry.user.name || entry.user.github_username || entry.user.email?.split('@')[0] || 'Anonymous'}
                   </span>
                   <span className={tab === 'score' ? 'text-kwestly-purple' : 'text-kwestly-green'}>
                     {tab === 'score' ? entry.score : `$${entry.earned}`}

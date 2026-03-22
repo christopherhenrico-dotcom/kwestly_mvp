@@ -23,12 +23,11 @@ const Profile: FC = () => {
     );
   }
 
-  const displayName = user.username || user.email?.split('@')[0] || 'User';
+  const displayName = user.name || user.github_username || user.email?.split('@')[0] || 'User';
   const initials = displayName.slice(0, 2).toUpperCase();
-  const executionScore = user.executionScore || 0;
-  const questsCompleted = user.questsCompleted || 0;
-  const successRate = user.successRate || 0;
-  const totalEarned = user.totalEarned || 0;
+  const executionScore = user.execution_score || 0;
+  const questsCompleted = user.quests_completed || 0;
+  const totalEarned = user.total_earned || 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -52,7 +51,7 @@ const Profile: FC = () => {
           <div className="grid grid-cols-3 gap-6 mb-10">
             {[
               { label: 'Quests Completed', value: questsCompleted, icon: Zap, color: 'text-kwestly-cyan' },
-              { label: 'Success Rate', value: `${successRate}%`, icon: Trophy, color: 'text-kwestly-green' },
+              { label: 'Execution Score', value: executionScore, icon: Trophy, color: 'text-kwestly-green' },
               { label: 'Total Earned', value: `$${totalEarned.toLocaleString()}`, icon: DollarSign, color: 'text-kwestly-gold' },
             ].map((stat, i) => (
               <motion.div
@@ -71,7 +70,7 @@ const Profile: FC = () => {
 
           <h2 className="font-display text-xl font-bold uppercase tracking-tighter text-foreground mb-4">Achievements</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {achievements.map((a, i) => (
+            {achievements.map((a) => (
               <div key={a.title} className={`border p-4 ${a.unlocked ? 'border-kwestly-gold bg-kwestly-gold/5' : 'border-border bg-card opacity-50'}`}>
                 <div className="flex items-center gap-2 mb-2">
                   {a.unlocked ? <a.icon className="w-4 h-4 text-kwestly-gold" strokeWidth={1.5} /> : <Lock className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />}

@@ -1,10 +1,9 @@
 import pb from './pocketbase';
-import type { Quest, QuestStatus } from '@/types';
+import type { Quest } from '@/types';
 
 const QUESTS_COLLECTION = 'quests';
 
 export const questService = {
-  // Get all quests with optional filtering
   async getQuests(options?: {
     filter?: string;
     sort?: string;
@@ -15,69 +14,16 @@ export const questService = {
       sort: options?.sort || '-created',
       expand: options?.expand || 'poster_id,worker_id',
     });
-    return result.items as Quest[];
+    return result.items as unknown as Quest[];
   },
 
-  // Get a single quest by ID
   async getQuest(id: string): Promise<Quest> {
     const result = await pb.collection(QUESTS_COLLECTION).getOne(id, {
       expand: 'poster_id,worker_id',
     });
-    return result as Quest;
+    return result as unknown as Quest;
   },
 
-  // Create a new quest
-  async createQuest(data: Partial<Quest>): Promise<Quest> {
-    const result = await pb.collection(QUESTS_COLLECTION).create(data);
-    return result as Quest;
-  },
-
-  // Update a quest
-  async updateQuest(id: string, data: Partial<Quest>): Promise<Quest> {
-    const result = await pb.collection(QUESTS_COLLECTION).update(id, data);
-    return result as Quest;
-  },
-
-  // Delete a quest
-  async deleteQuest(id: string): Promise<void> {
-    await pb.collection(QUESTS_COLLECTION).delete(id);
-  },
-
-  // Accept a quest (update status and worker)
-  async acceptQuest(questId: string): Promise<Quest> {
-    const userId = pb.authStore.record?.id;
-    if (!userId) throw new Error('User not authenticated');
-
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24); // Default 24 hours
-
-    const result = await pb.collection(QUESTS_COLLECTION).update(questId, {
-      status: 'active' as QuestStatus,
-      worker_id: userId,
-      accepted_at: new Date().toISOString(),
-      expires_at: expiresAt.toISOString(),
-    });
-    return result as Quest;
-  },
-
-  // Submit quest work
-  async submitQuest(
-    questId: string,
-    submissionData: {
-      submission_url?: string;
-      submission_notes?: string;
-    }
-  ): Promise<Quest> {
-    const result = await pb.collection(QUESTS_COLLECTION).update(questId, {
-      status: 'submitted' as QuestStatus,
-      submission_url: submissionData.submission_url,
-      submission_notes: submissionData.submission_notes,
-      submitted_at: new Date().toISOString(),
-    });
-    return result as Quest;
-  },
-
-  // Get open quests
   async getOpenQuests(): Promise<Quest[]> {
     return this.getQuests({
       filter: 'status = "open"',
@@ -85,25 +31,67 @@ export const questService = {
     });
   },
 
-  // Get active quests for current user
   async getActiveQuests(): Promise<Quest[]> {
     const userId = pb.authStore.record?.id;
-    if (!userId) throw new Error('User not authenticated');
-
+    if (!userId) return [];
     return this.getQuests({
-      filter: `worker_id = "${userId}" && (status = "active" || status = "submitted")`,
-      sort: '-accepted_at',
+      filter: `worker_id = "${userId}" && status = "active"`,
+      sort: '-created',
     });
   },
 
-  // Get quests posted by current user
+  async getMyQuests(): Promise<Quest[]> {
+    const userId = pb.authStore.record?.id;
+    if (!userId) return [];
+    return this.getQuests({
+      filter: `worker_id = "${userId}"`,
+      sort: '-created',
+    });
+  },
+
   async getPostedQuests(): Promise<Quest[]> {
     const userId = pb.authStore.record?.id;
-    if (!userId) throw new Error('User not authenticated');
-
+    if (!userId) return [];
     return this.getQuests({
       filter: `poster_id = "${userId}"`,
       sort: '-created',
+    });
+  },
+
+  async createQuest(data: Partial<Quest>): Promise<Quest> {
+    const result = await pb.collection(QUESTS_COLLECTION).create(data as Record<string, unknown>);
+    return result as unknown as Quest;
+  },
+
+  async updateQuest(id: string, data: Partial<Quest>): Promise<Quest> {
+    const result = await pb.collection(QUESTS_COLLECTION).update(id, data as Record<string, unknown>);
+    return result as unknown as Quest;
+  },
+
+  async deleteQuest(id: string): Promise<void> {
+    await pb.collection(QUESTS_COLLECTION).delete(id);
+  },
+
+  async acceptQuest(questId: string): Promise<Quest> {
+    const userId = pb.authStore.record?.id;
+    if (!userId) throw new Error('Not authenticated');
+    
+    return this.updateQuest(questId, {
+      worker_id: userId,
+      status: 'active',
+      accepted_at: new Date().toISOString(),
+    });
+  },
+
+  async submitQuest(
+    questId: string,
+    data: { submission_url?: string; submission_notes?: string }
+  ): Promise<Quest> {
+    return this.updateQuest(questId, {
+      status: 'submitted',
+      submission_url: data.submission_url,
+      submission_notes: data.submission_notes,
+      submitted_at: new Date().toISOString(),
     });
   },
 };

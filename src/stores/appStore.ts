@@ -1,21 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import pb from '@/services/pocketbase';
-import type { Quest, User } from '@/types';
-import type { QuestDifficulty } from '@/types';
+import type { User, Quest, QuestDifficulty } from '@/types';
 
-// Filter type
 export type QuestFilter = 'all' | QuestDifficulty;
 
-// Extended Quest interface with computed fields
-export interface DisplayQuest extends Quest {
+export interface DisplayQuest extends Omit<Quest, 'status'> {
+  status?: 'open' | 'active' | 'submitted' | 'completed' | 'failed' | 'cancelled';
   ttl: number;
   endTime: number;
   minScore: number;
   requirements?: string[];
   deliverables?: string;
   postedBy?: string;
-  status?: 'open' | 'active' | 'submitted' | 'completed' | 'failed' | 'cancelled';
 }
 
 interface QuestState {
@@ -32,11 +29,10 @@ interface QuestState {
   submitQuest: (id: string) => void;
 }
 
-// Helper to transform Quest to DisplayQuest
 export function transformQuest(quest: Quest): DisplayQuest {
   return {
     ...quest,
-    ttl: quest.ttl_hours * 3600000, // Convert hours to milliseconds
+    ttl: quest.ttl_hours * 3600000,
     endTime: quest.expires_at
       ? new Date(quest.expires_at).getTime()
       : Date.now() + (quest.ttl_hours * 3600000),
@@ -45,7 +41,7 @@ export function transformQuest(quest: Quest): DisplayQuest {
       ? quest.description.split('\n').filter((line) => line.trim().startsWith('-')).map((line) => line.trim().replace(/^- /, ''))
       : [],
     deliverables: quest.submission_notes || 'Submit your work via PR link',
-    postedBy: quest.expand?.poster_id?.username || 'Unknown',
+    postedBy: quest.expand?.poster_id?.name || quest.expand?.poster_id?.github_username || 'Unknown',
     status: quest.status || 'open',
   };
 }
@@ -103,11 +99,10 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>()((set) => ({
-  user: pb.authStore.record as User | null,
+  user: pb.authStore.record as unknown as User | null,
   isAuthenticated: pb.authStore.isValid,
   setUser: (user) => set({ user, isAuthenticated: !!user }),
   login: () => {
-    // This is a placeholder - actual login happens via OAuth or password
     set({ isAuthenticated: true });
   },
   logout: () => {
@@ -116,10 +111,9 @@ export const useAuthStore = create<AuthState>()((set) => ({
   },
 }));
 
-// Subscribe to auth store changes
 pb.authStore.onChange((token, record) => {
   useAuthStore.setState({
-    user: record as User | null,
+    user: record as unknown as User | null,
     isAuthenticated: !!token,
   });
 });
