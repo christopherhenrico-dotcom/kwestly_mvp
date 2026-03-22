@@ -3,7 +3,7 @@ import TopNav from '@/components/layout/TopNav';
 import AppSidebar from '@/components/layout/AppSidebar';
 import { Loader2 } from 'lucide-react';
 import { useCreateQuest, useQuests, useUpdateQuest } from '@/hooks/useQuests';
-import pb from '@/services/pocketbase';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Admin: FC = () => {
   const [tab, setTab] = useState<'post' | 'review'>('post');
@@ -13,6 +13,7 @@ const Admin: FC = () => {
   const [difficulty, setDifficulty] = useState<string>('easy');
   const [timeLimit, setTimeLimit] = useState('4');
   const [minScore, setMinScore] = useState('100');
+  const { userId } = useAuth();
 
   const createQuest = useCreateQuest();
   const updateQuest = useUpdateQuest();
@@ -32,7 +33,7 @@ const Admin: FC = () => {
         ttl_hours: parseInt(timeLimit) || 4,
         min_score: parseInt(minScore) || 100,
         status: 'open',
-        poster_id: pb.authStore.record?.id || '',
+        poster_id: userId || '',
       },
       {
         onSuccess: () => {
@@ -138,7 +139,7 @@ const Admin: FC = () => {
                     type="number"
                     value={timeLimit}
                     onChange={e => setTimeLimit(e.target.value)}
-                    className="w-full bg-secondary border border-border px-4 py-3 font-mono text-sm text-foreground focus:outline-none focus:border-primary transition-colors"
+                    className="w-full bg-secondary border border-border px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
                 <div>
@@ -147,7 +148,7 @@ const Admin: FC = () => {
                     type="number"
                     value={minScore}
                     onChange={e => setMinScore(e.target.value)}
-                    className="w-full bg-secondary border border-border px-4 py-3 font-mono text-sm text-foreground focus:outline-none focus:border-primary transition-colors"
+                    className="w-full bg-secondary border border-border px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
               </div>

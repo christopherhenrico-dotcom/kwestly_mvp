@@ -1,64 +1,56 @@
-import pb from './pocketbase';
 import type { User } from '@/types';
 
+export function getClerkUser(): User | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const user = (window as any).__clerk_user;
+    if (!user) return null;
+    return {
+      id: user.id,
+      email: user.primaryEmailAddress?.emailAddress || '',
+      name: user.fullName || user.username || '',
+      github_username: user.username || '',
+      avatar_url: user.imageUrl || '',
+      execution_score: 0,
+      total_earned: 0,
+      quests_completed: 0,
+      rank: 'bronze',
+    };
+  } catch {
+    return null;
+  }
+}
+
 export const authService = {
-  isAuthenticated(): boolean {
-    return pb.authStore.isValid;
-  },
-
-  getCurrentUser(): User | null {
-    return pb.authStore.record as unknown as User;
-  },
-
-  getToken(): string | null {
-    return pb.authStore.token;
-  },
-
-  async login(email: string, password: string): Promise<User> {
-    const result = await pb.collection('users').authWithPassword(email, password);
-    return result.record as unknown as User;
-  },
-
-  async register(email: string, password: string, name: string): Promise<User> {
-    const result = await pb.collection('users').create({
-      email,
-      password,
-      passwordConfirm: password,
-      name,
-    });
-    await this.login(email, password);
-    return result as unknown as User;
-  },
-
-  logout(): void {
-    pb.authStore.clear();
-  },
-
-  async requestPasswordReset(email: string): Promise<void> {
-    await pb.collection('users').requestPasswordReset(email);
-  },
-
-  loginWithGithub(): void {
-    pb.collection('users').authWithOAuth2({
-      provider: 'github',
-      redirectTo: `${window.location.origin}/auth/callback`,
-    });
-  },
-
-  async refreshUser(): Promise<User | null> {
-    if (!this.isAuthenticated()) return null;
+  async getToken(): Promise<string | null> {
+    if (typeof window === 'undefined') return null;
     try {
-      const result = await pb.collection('users').authRefresh();
-      return result.record as unknown as User;
+      const clerk = (window as any).__Clerk__;
+      if (clerk && typeof clerk.getToken === 'function') {
+        return await clerk.getToken();
+      }
+      return null;
     } catch {
-      this.logout();
       return null;
     }
   },
 
-  async updateProfile(userId: string, data: Partial<User>): Promise<User> {
-    const result = await pb.collection('users').update(userId, data);
-    return result as unknown as User;
+  isAuthenticated(): boolean {
+    if (typeof window === 'undefined') return false;
+    const user = (window as any).__clerk_user;
+    return !!user;
+  },
+
+  getCurrentUser(): User | null {
+    return getClerkUser();
+  },
+
+  async refreshUser(): Promise<User | null> {
+    return getClerkUser();
+  },
+
+  async updateProfile(_userId: string, data: Partial<User>): Promise<User> {
+    return { ...getClerkUser(), ...data } as User;
   },
 };
 

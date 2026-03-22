@@ -1,6 +1,5 @@
 import { FC, useState, useEffect } from 'react';
-import { X, Bell, CheckCircle, XCircle, Clock, DollarSign } from 'lucide-react';
-import pb from '@/services/pocketbase';
+import { X, Bell, CheckCircle, DollarSign } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 export interface Notification {
@@ -17,9 +16,6 @@ const notificationIcons = {
   quest_update: Bell,
   payment: DollarSign,
   system: CheckCircle,
-  pending: Clock,
-  approved: CheckCircle,
-  rejected: XCircle,
 };
 
 interface NotificationPanelProps {
@@ -39,41 +35,18 @@ const NotificationPanel: FC<NotificationPanelProps> = ({ isOpen, onClose }) => {
 
   const loadNotifications = async () => {
     setLoading(true);
-    try {
-      const result = await pb.collection('notifications').getList(1, 50, {
-        sort: '-created',
-      });
-      setNotifications(result.items as unknown as Notification[]);
-    } catch (error) {
-      console.error('Failed to load notifications:', error);
-      setNotifications([]);
-    } finally {
-      setLoading(false);
-    }
+    setNotifications([]);
+    setLoading(false);
   };
 
   const markAsRead = async (id: string) => {
-    try {
-      await pb.collection('notifications').update(id, { read: true });
-      setNotifications(prev =>
-        prev.map(n => (n.id === id ? { ...n, read: true } : n))
-      );
-    } catch (error) {
-      console.error('Failed to mark notification as read:', error);
-    }
+    setNotifications(prev =>
+      prev.map(n => (n.id === id ? { ...n, read: true } : n))
+    );
   };
 
   const markAllAsRead = async () => {
-    try {
-      await Promise.all(
-        notifications
-          .filter(n => !n.read)
-          .map(n => pb.collection('notifications').update(n.id, { read: true }))
-      );
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    } catch (error) {
-      console.error('Failed to mark all as read:', error);
-    }
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;

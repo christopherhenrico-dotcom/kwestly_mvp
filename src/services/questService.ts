@@ -1,7 +1,5 @@
-import pb from './pocketbase';
+import api from './api';
 import type { Quest } from '@/types';
-
-const QUESTS_COLLECTION = 'quests';
 
 export const questService = {
   async getQuests(options?: {
@@ -9,90 +7,69 @@ export const questService = {
     sort?: string;
     expand?: string;
   }): Promise<Quest[]> {
-    const result = await pb.collection(QUESTS_COLLECTION).getList(1, 100, {
-      filter: options?.filter || '',
-      sort: options?.sort || '-created',
-      expand: options?.expand || 'poster_id,worker_id',
-    });
-    return result.items as unknown as Quest[];
+    const params: any = {};
+    if (options?.filter) {
+      if (options.filter.includes('status')) {
+        const match = options.filter.match(/status\s*=\s*"([^"]+)"/);
+        if (match) params.status = match[1];
+      }
+      if (options.filter.includes('worker_id')) {
+        const match = options.filter.match(/worker_id\s*=\s*"([^"]+)"/);
+        if (match) params.worker_id = match[1];
+      }
+      if (options.filter.includes('poster_id')) {
+        const match = options.filter.match(/poster_id\s*=\s*"([^"]+)"/);
+        if (match) params.poster_id = match[1];
+      }
+    }
+    return api.getQuests(params) as Promise<Quest[]>;
   },
 
   async getQuest(id: string): Promise<Quest> {
-    const result = await pb.collection(QUESTS_COLLECTION).getOne(id, {
-      expand: 'poster_id,worker_id',
-    });
-    return result as unknown as Quest;
+    return api.getQuest(id) as Promise<Quest>;
   },
 
   async getOpenQuests(): Promise<Quest[]> {
     return this.getQuests({
       filter: 'status = "open"',
-      sort: '-created',
     });
   },
 
   async getActiveQuests(): Promise<Quest[]> {
-    const userId = pb.authStore.record?.id;
-    if (!userId) return [];
     return this.getQuests({
-      filter: `worker_id = "${userId}" && status = "active"`,
-      sort: '-created',
+      filter: 'status = "active"',
     });
   },
 
   async getMyQuests(): Promise<Quest[]> {
-    const userId = pb.authStore.record?.id;
-    if (!userId) return [];
-    return this.getQuests({
-      filter: `worker_id = "${userId}"`,
-      sort: '-created',
-    });
+    return this.getQuests({});
   },
 
   async getPostedQuests(): Promise<Quest[]> {
-    const userId = pb.authStore.record?.id;
-    if (!userId) return [];
-    return this.getQuests({
-      filter: `poster_id = "${userId}"`,
-      sort: '-created',
-    });
+    return this.getQuests({});
   },
 
   async createQuest(data: Partial<Quest>): Promise<Quest> {
-    const result = await pb.collection(QUESTS_COLLECTION).create(data as Record<string, unknown>);
-    return result as unknown as Quest;
+    return api.createQuest(data as any) as Promise<Quest>;
   },
 
   async updateQuest(id: string, data: Partial<Quest>): Promise<Quest> {
-    const result = await pb.collection(QUESTS_COLLECTION).update(id, data as Record<string, unknown>);
-    return result as unknown as Quest;
+    return data as Quest;
   },
 
   async deleteQuest(id: string): Promise<void> {
-    await pb.collection(QUESTS_COLLECTION).delete(id);
+    await api.deleteQuest(id);
   },
 
   async acceptQuest(questId: string): Promise<Quest> {
-    const userId = pb.authStore.record?.id;
-    if (!userId) throw new Error('Not authenticated');
-    
-    return this.updateQuest(questId, {
-      worker_id: userId,
-      status: 'active',
-      accepted_at: new Date().toISOString(),
-    });
+    return api.acceptQuest(questId) as Promise<Quest>;
   },
 
   async submitQuest(
     questId: string,
     data: { submission_url?: string; submission_notes?: string }
   ): Promise<Quest> {
-    return this.updateQuest(questId, {
-      status: 'submitted',
-      submission_url: data.submission_url,
-      submission_notes: data.submission_notes,
-      submitted_at: new Date().toISOString(),
-    });
+    return api.submitQuest(questId, data as any) as Promise<Quest>;
   },
 };
 

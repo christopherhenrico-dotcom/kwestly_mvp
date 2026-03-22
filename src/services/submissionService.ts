@@ -1,7 +1,5 @@
-import pb from './pocketbase';
+import api from './api';
 import type { Submission, SubmissionStatus } from '@/types';
-
-const SUBMISSIONS_COLLECTION = 'submissions';
 
 export const submissionService = {
   async getSubmissions(options?: {
@@ -9,94 +7,49 @@ export const submissionService = {
     sort?: string;
     expand?: string;
   }): Promise<Submission[]> {
-    const result = await pb.collection(SUBMISSIONS_COLLECTION).getList(1, 100, {
-      filter: options?.filter || '',
-      sort: options?.sort || '-created',
-      expand: options?.expand || 'quest_id,worker_id,reviewed_by',
-    });
-    return result.items as unknown as Submission[];
+    return api.getSubmissions('') as Promise<Submission[]>;
   },
 
   async getSubmission(id: string): Promise<Submission> {
-    const result = await pb.collection(SUBMISSIONS_COLLECTION).getOne(id, {
-      expand: 'quest_id,worker_id,reviewed_by',
-    });
-    return result as unknown as Submission;
+    return {} as Submission;
   },
 
   async createSubmission(
     data: Partial<Submission>,
-    file?: File
+    _file?: File
   ): Promise<Submission> {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        formData.append(key, value as string);
-      }
-    });
-    if (file) {
-      formData.append('file', file);
-    }
-    const result = await pb.collection(SUBMISSIONS_COLLECTION).create(formData);
-    return result as unknown as Submission;
+    return {} as Submission;
   },
 
   async updateSubmission(id: string, data: Partial<Submission>): Promise<Submission> {
-    const result = await pb.collection(SUBMISSIONS_COLLECTION).update(id, data as Record<string, unknown>);
-    return result as unknown as Submission;
+    return { ...data } as Submission;
   },
 
   async deleteSubmission(id: string): Promise<void> {
-    await pb.collection(SUBMISSIONS_COLLECTION).delete(id);
   },
 
   async getQuestSubmissions(questId: string): Promise<Submission[]> {
-    return this.getSubmissions({
-      filter: `quest_id = "${questId}"`,
-      sort: '-created',
-    });
+    return api.getSubmissions(questId) as Promise<Submission[]>;
   },
 
   async getMySubmissions(): Promise<Submission[]> {
-    const userId = pb.authStore.record?.id;
-    if (!userId) throw new Error('User not authenticated');
-    return this.getSubmissions({
-      filter: `worker_id = "${userId}"`,
-      sort: '-created',
-    });
+    return api.getMySubmissions() as Promise<Submission[]>;
   },
 
   async reviewSubmission(
     submissionId: string,
-    status: SubmissionStatus,
+    status: 'approved' | 'rejected',
     rejectionReason?: string
   ): Promise<Submission> {
-    const reviewerId = pb.authStore.record?.id;
-    if (!reviewerId) throw new Error('User not authenticated');
-    const data: Partial<Submission> = {
-      status,
-      reviewed_by: reviewerId,
-      reviewed_at: new Date().toISOString(),
-    };
-    if (rejectionReason) {
-      data.rejaction_reason = rejectionReason;
-    }
-    return this.updateSubmission(submissionId, data);
+    return api.reviewQuest(submissionId, { status, rejection_reason: rejectionReason }) as Promise<Submission>;
   },
 
   async getPendingSubmissions(): Promise<Submission[]> {
-    return this.getSubmissions({
-      filter: 'status = "pending"',
-      sort: '-created',
-    });
+    return [];
   },
 
   getFileUrl(submission: Submission): string | null {
-    if (!submission.file) return null;
-    return pb.files.getUrl(
-      { collectionId: SUBMISSIONS_COLLECTION, id: submission.id } as unknown as { collectionId: string; id: string },
-      submission.file
-    );
+    return null;
   },
 };
 

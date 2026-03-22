@@ -3,6 +3,19 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 class ApiClient {
   private token: string | null = null;
 
+  async getClerkToken(): Promise<string | null> {
+    if (typeof window === 'undefined') return null;
+    try {
+      const clerk = (window as any).__Clerk__;
+      if (clerk && typeof clerk.getToken === 'function') {
+        return await clerk.getToken();
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
   setToken(token: string | null) {
     this.token = token;
     if (token) {
@@ -13,9 +26,6 @@ class ApiClient {
   }
 
   getToken(): string | null {
-    if (!this.token) {
-      this.token = localStorage.getItem('auth_token');
-    }
     return this.token;
   }
 
@@ -26,7 +36,7 @@ class ApiClient {
       ...(options.headers as Record<string, string> || {}),
     };
 
-    const token = this.getToken();
+    const token = this.token || await this.getClerkToken();
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -45,8 +55,7 @@ class ApiClient {
     return response.json();
   }
 
-  // Auth
-  githubLogin() {
+  async githubLogin() {
     window.location.href = `${API_URL}/api/auth/github`;
   }
 
@@ -73,7 +82,6 @@ class ApiClient {
     localStorage.removeItem('user');
   }
 
-  // Users
   async getUsers() {
     return this.request<any[]>('/users');
   }
@@ -93,7 +101,6 @@ class ApiClient {
     return this.request<any[]>(`/users/leaderboard/top?sort=${sort}&limit=${limit}`);
   }
 
-  // Quests
   async getQuests(params?: { status?: string; difficulty?: string; worker_id?: string }) {
     const searchParams = new URLSearchParams();
     if (params?.status) searchParams.set('status', params.status);
@@ -107,7 +114,7 @@ class ApiClient {
     return this.request<any>(`/quests/${id}`);
   }
 
-  async createQuest(data: { title: string; description?: string; bounty: number; difficulty?: string; min_score?: number; ttl_hours?: number }) {
+  async createQuest(data: { title: string; description?: string; bounty: number; difficulty?: string; min_score?: number; ttl_hours?: number; poster_id?: string }) {
     return this.request<any>('/quests', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -136,7 +143,6 @@ class ApiClient {
     return this.request<{ success: boolean }>(`/quests/${id}`, { method: 'DELETE' });
   }
 
-  // Submissions
   async getSubmissions(questId: string) {
     return this.request<any[]>(`/submissions/quest/${questId}`);
   }
@@ -145,7 +151,6 @@ class ApiClient {
     return this.request<any[]>('/submissions/my');
   }
 
-  // Transactions
   async getMyTransactions() {
     return this.request<any[]>('/transactions/my');
   }

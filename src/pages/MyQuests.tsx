@@ -16,24 +16,24 @@ const tabs = [
 
 const MyQuests: FC = () => {
   const [activeTab, setActiveTab] = useState('active');
-  const { user } = useAuth();
+  const { user, userId } = useAuth();
 
   const { data: workerQuests = [], isLoading: workerLoading } = useQuery({
     queryKey: ['my-quests', 'worker'],
-    queryFn: () => api.getQuests({ worker_id: user?.id }),
-    enabled: !!user?.id,
+    queryFn: () => api.getQuests({ worker_id: userId || undefined }),
+    enabled: !!userId,
   });
 
-  const { data: posterQuests = [], isLoading: posterLoading } = useQuery({
-    queryKey: ['my-quests', 'poster'],
+  const { data: allQuests = [], isLoading: allLoading } = useQuery({
+    queryKey: ['my-quests', 'all'],
     queryFn: () => api.getQuests(),
-    enabled: !!user?.id,
+    enabled: !!userId,
   });
 
-  const isLoading = workerLoading || posterLoading;
+  const isLoading = workerLoading || allLoading;
 
   const filteredQuests = activeTab === 'open' 
-    ? posterQuests.filter((q: any) => q.poster_id === user?.id)
+    ? allQuests.filter((q: any) => q.poster_id === userId)
     : workerQuests.filter((q: any) => q.status === activeTab);
 
   return (

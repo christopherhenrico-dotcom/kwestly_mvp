@@ -5,7 +5,6 @@ import ExecutionScoreBadge from '@/components/user/ExecutionScoreBadge';
 import { useQuestStore } from '@/stores/appStore';
 import { useAuth } from '@/contexts/AuthContext';
 import NotificationPanel from '@/components/notifications/NotificationPanel';
-import pb from '@/services/pocketbase';
 
 const TopNav: FC = () => {
   const { user, logout } = useAuth();
@@ -15,9 +14,8 @@ const TopNav: FC = () => {
   const isDashboard = location.pathname === '/dashboard';
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const handleLogout = () => {
-    pb.authStore.clear();
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 

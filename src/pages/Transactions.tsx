@@ -3,9 +3,10 @@ import { motion } from 'framer-motion';
 import TopNav from '@/components/layout/TopNav';
 import AppSidebar from '@/components/layout/AppSidebar';
 import { DollarSign, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle, XCircle, ExternalLink, Loader2 } from 'lucide-react';
-import pb from '@/services/pocketbase';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import api from '@/services/api';
 
 interface Transaction {
   id: string;
@@ -35,6 +36,7 @@ const statusColors = {
 };
 
 const Transactions: FC = () => {
+  const { userId } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'earned' | 'paid'>('all');
@@ -46,21 +48,8 @@ const Transactions: FC = () => {
   const loadTransactions = async () => {
     setLoading(true);
     try {
-      const userId = pb.authStore.record?.id;
-      let filterQuery = '';
-      
-      if (filter === 'earned') {
-        filterQuery = `worker_id = "${userId}"`;
-      } else if (filter === 'paid') {
-        filterQuery = `worker_id != "${userId}"`;
-      }
-
-      const result = await pb.collection('transactions').getList(1, 100, {
-        filter: filterQuery,
-        sort: '-created_at',
-        expand: 'quest_id',
-      });
-      setTransactions(result.items as unknown as Transaction[]);
+      const data = await api.getMyTransactions();
+      setTransactions(data);
     } catch (error) {
       console.error('Failed to load transactions:', error);
       toast.error('Failed to load transactions');
@@ -69,12 +58,18 @@ const Transactions: FC = () => {
     }
   };
 
-  const totalEarned = transactions
-    .filter(t => t.status === 'confirmed')
+  const filteredTransactions = filter === 'all' 
+    ? transactions 
+    : filter === 'earned'
+      ? transactions.filter(t => t.worker_id === userId)
+      : transactions.filter(t => t.worker_id !== userId);
+
+  const totalEarned = filteredTransactions
+    .filter(t => t.status === 'confirmed' && t.worker_id === userId)
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const totalPending = transactions
-    .filter(t => t.status === 'pending')
+  const totalPending = filteredTransactions
+    .filter(t => t.status === 'pending' && t.worker_id === userId)
     .reduce((sum, t) => sum + t.amount, 0);
 
   return (
@@ -107,7 +102,7 @@ const Transactions: FC = () => {
                 <DollarSign className="w-4 h-4 text-primary" />
                 <span className="font-mono text-xs text-muted-foreground">Total Transactions</span>
               </div>
-              <p className="font-mono text-2xl font-bold text-primary">{transactions.length}</p>
+              <p className="font-mono text-2xl font-bold text-primary">{filteredTransactions.length}</p>
             </div>
           </div>
 
@@ -131,7 +126,7 @@ const Transactions: FC = () => {
             <div className="flex justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
-          ) : transactions.length === 0 ? (
+          ) : filteredTransactions.length === 0 ? (
             <div className="text-center py-20 font-mono text-muted-foreground border border-border">
               No transactions yet.
             </div>
@@ -144,9 +139,9 @@ const Transactions: FC = () => {
                 <span>Status</span>
               </div>
 
-              {transactions.map((tx, i) => {
+              {filteredTransactions.map((tx, i) => {
                 const StatusIcon = statusIcons[tx.status];
-                const isEarned = tx.worker_id === pb.authStore.record?.id;
+                const isEarned = tx.worker_id === userId;
 
                 return (
                   <motion.div
@@ -197,9 +192,9 @@ const Transactions: FC = () => {
             </div>
           )}
 
-          {transactions.length > 0 && (
+          {filteredTransactions.length > 0 && (
             <p className="mt-4 font-mono text-xs text-muted-foreground text-center">
-              {formatDistanceToNow(new Date(transactions[0]?.created_at), { addSuffix: true })} • Last updated
+              {formatDistanceToNow(new Date(filteredTransactions[0]?.created_at), { addSuffix: true })} • Last updated
             </p>
           )}
         </main>

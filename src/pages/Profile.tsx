@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import TopNav from '@/components/layout/TopNav';
 import AppSidebar from '@/components/layout/AppSidebar';
 import ExecutionScoreBadge from '@/components/user/ExecutionScoreBadge';
-import { useAuthStore } from '@/stores/appStore';
+import { useAuth } from '@/contexts/AuthContext';
 import { Trophy, Zap, DollarSign, Award, Lock } from 'lucide-react';
 
 const achievements = [
@@ -13,7 +13,7 @@ const achievements = [
 ];
 
 const Profile: FC = () => {
-  const user = useAuthStore(s => s.user);
+  const { user } = useAuth();
 
   if (!user) {
     return (

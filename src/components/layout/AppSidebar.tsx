@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Swords, Trophy, User, Shield, DollarSign, Hexagon } from 'lucide-react';
 import { useQuestStore } from '@/stores/appStore';
 import { useAuth } from '@/contexts/AuthContext';
-import pb from '@/services/pocketbase';
 
 const navItems = [
   { label: 'Terminal', path: '/dashboard', icon: LayoutDashboard },
@@ -19,9 +18,8 @@ const AppSidebar: FC = () => {
   const activeCount = useQuestStore(s => s.activeQuests.length);
   const { logout } = useAuth();
 
-  const handleLogout = () => {
-    pb.authStore.clear();
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 

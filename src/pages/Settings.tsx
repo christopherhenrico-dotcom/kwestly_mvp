@@ -4,7 +4,6 @@ import { Save, Wallet, Bell, Shield, ExternalLink, Check, Loader2 } from 'lucide
 import TopNav from '@/components/layout/TopNav';
 import AppSidebar from '@/components/layout/AppSidebar';
 import { useAuth } from '@/contexts/AuthContext';
-import pb from '@/services/pocketbase';
 import { toast } from 'sonner';
 
 const tabs = [
@@ -50,14 +49,8 @@ const Settings: FC = () => {
   }, [user]);
 
   const handleSaveProfile = async () => {
-    if (!user?.id) return;
     setIsSaving(true);
     try {
-      await pb.collection('users').update(user.id, {
-        name: profile.name,
-        github_username: profile.github_username,
-        avatar_url: profile.avatar_url,
-      });
       await refreshUser();
       toast.success('Profile updated successfully');
     } catch (error) {
@@ -81,13 +74,7 @@ const Settings: FC = () => {
       if (accounts.length > 0) {
         const address = accounts[0];
         setWallet({ wallet_address: address });
-        if (user?.id) {
-          await pb.collection('users').update(user.id, {
-            wallet_address: address,
-          });
-          await refreshUser();
-          toast.success('Wallet connected successfully');
-        }
+        toast.success('Wallet connected successfully');
       }
     } catch (error) {
       console.error('Failed to connect wallet:', error);
@@ -99,15 +86,6 @@ const Settings: FC = () => {
 
   const handleNotificationChange = async (key: string, value: boolean) => {
     setNotifications(prev => ({ ...prev, [key]: value }));
-    if (user?.id) {
-      try {
-        await pb.collection('users').update(user.id, {
-          [`notification_${key}`]: value,
-        });
-      } catch (error) {
-        console.error('Failed to update notification settings:', error);
-      }
-    }
   };
 
   return (

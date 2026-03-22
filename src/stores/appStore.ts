@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import pb from '@/services/pocketbase';
 import type { User, Quest, QuestDifficulty } from '@/types';
 
 export type QuestFilter = 'all' | QuestDifficulty;
@@ -89,31 +88,3 @@ export const useQuestStore = create<QuestState>()(
     }
   )
 );
-
-interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  setUser: (user: User | null) => void;
-  login: () => void;
-  logout: () => void;
-}
-
-export const useAuthStore = create<AuthState>()((set) => ({
-  user: pb.authStore.record as unknown as User | null,
-  isAuthenticated: pb.authStore.isValid,
-  setUser: (user) => set({ user, isAuthenticated: !!user }),
-  login: () => {
-    set({ isAuthenticated: true });
-  },
-  logout: () => {
-    pb.authStore.clear();
-    set({ user: null, isAuthenticated: false });
-  },
-}));
-
-pb.authStore.onChange((token, record) => {
-  useAuthStore.setState({
-    user: record as unknown as User | null,
-    isAuthenticated: !!token,
-  });
-});

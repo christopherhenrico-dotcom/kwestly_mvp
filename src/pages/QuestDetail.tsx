@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, Zap, CheckCircle2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Clock, Zap, Loader2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import TopNav from '@/components/layout/TopNav';
 import DifficultyBadge from '@/components/quest/DifficultyBadge';
@@ -13,7 +13,7 @@ import api from '@/services/api';
 const QuestDetail: FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { userId } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: quest, isLoading } = useQuery({
@@ -51,8 +51,8 @@ const QuestDetail: FC = () => {
     );
   }
 
-  const isAccepted = quest.worker_id === user?.id;
-  const isOwner = quest.poster_id === user?.id;
+  const isAccepted = quest.worker_id === userId;
+  const isOwner = quest.poster_id === userId;
 
   const handleAccept = () => {
     acceptMutation.mutate();
@@ -104,7 +104,7 @@ const QuestDetail: FC = () => {
               onClick={() => navigate(`/quest/${quest.id}/submit`)}
               className="w-full py-4 font-mono font-bold text-lg border-2 border-kwestly-green bg-kwestly-green/10 text-kwestly-green hover:bg-kwestly-green/20 transition-all"
             >
-              SUBMIT WORK →
+              SUBMIT WORK
             </motion.button>
           ) : quest.status === 'open' && !isOwner ? (
             <motion.button
@@ -114,7 +114,7 @@ const QuestDetail: FC = () => {
               disabled={acceptMutation.isPending}
               className="w-full py-4 font-mono font-bold text-lg bg-primary text-primary-foreground border-2 border-primary glow-cyan-strong hover:bg-primary/90 transition-all disabled:opacity-50"
             >
-              {acceptMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 'ACCEPT QUEST ⚡'}
+              {acceptMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 'ACCEPT QUEST'}
             </motion.button>
           ) : quest.status === 'submitted' && isOwner ? (
             <motion.button

@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { X, Zap, Wallet, Github, Check, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import pb from '@/services/pocketbase';
 
 declare global {
   interface Window {
@@ -60,9 +59,6 @@ const Onboarding: FC<OnboardingProps> = ({ onComplete }) => {
         });
         if (accounts.length > 0) {
           setWalletAddress(accounts[0]);
-          await pb.collection('users').update(user?.id, {
-            wallet_address: accounts[0],
-          });
         }
       } catch (error) {
         console.error('Failed to connect wallet:', error);
