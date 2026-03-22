@@ -4,16 +4,28 @@ import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import TopNav from '@/components/layout/TopNav';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import { useQuest } from '@/hooks/useQuests';
-import { useSubmitQuest } from '@/hooks/useQuests';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import api from '@/services/api';
 
 const Submit: FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: quest, isLoading: questLoading } = useQuest(id!);
-  const submitQuest = useSubmitQuest();
   const [prLink, setPrLink] = useState('');
   const [notes, setNotes] = useState('');
+
+  const { data: quest, isLoading: questLoading } = useQuery({
+    queryKey: ['quest', id],
+    queryFn: () => api.getQuest(id!),
+    enabled: !!id,
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: (data: { submission_url: string; submission_notes?: string }) => api.submitQuest(id!, data),
+    onSuccess: () => {
+      confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors: ['#39ff14', '#00f5ff'] });
+      setTimeout(() => navigate('/my-quests'), 1500);
+    },
+  });
 
   if (questLoading) {
     return (
@@ -34,19 +46,8 @@ const Submit: FC = () => {
   const isValid = prLink.startsWith('https://github.com/');
 
   const handleSubmit = () => {
-    if (!id || !isValid) return;
-    submitQuest.mutate(
-      { questId: id, data: { submission_url: prLink, submission_notes: notes } },
-      {
-        onSuccess: () => {
-          confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors: ['#39ff14', '#00f5ff'] });
-          setTimeout(() => navigate('/my-quests'), 1500);
-        },
-        onError: (error) => {
-          console.error('Failed to submit:', error);
-        },
-      }
-    );
+    if (!isValid) return;
+    submitMutation.mutate({ submission_url: prLink, submission_notes: notes });
   };
 
   return (
@@ -62,28 +63,24 @@ const Submit: FC = () => {
 
         <div className="space-y-6">
           <div>
-            <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider mb-2 block">
-              GitHub PR Link *
-            </label>
+            <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider mb-2 block">GitHub PR Link *</label>
             <input
               type="url"
               value={prLink}
               onChange={e => setPrLink(e.target.value)}
               placeholder="https://github.com/..."
-              className="w-full bg-secondary border border-border px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+              className="w-full glass-input px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider mb-2 block">
-              Notes (optional)
-            </label>
+            <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Notes (optional)</label>
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
               rows={4}
               placeholder="Any context for the reviewer..."
-              className="w-full bg-secondary border border-border px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors resize-none"
+              className="w-full glass-input px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none resize-none"
             />
           </div>
 
@@ -91,18 +88,14 @@ const Submit: FC = () => {
             whileHover={isValid ? { scale: 1.01 } : {}}
             whileTap={isValid ? { scale: 0.98 } : {}}
             onClick={handleSubmit}
-            disabled={!isValid || submitQuest.isPending}
+            disabled={!isValid || submitMutation.isPending}
             className={`w-full py-4 font-mono font-bold text-lg border-2 transition-all ${
-              isValid && !submitQuest.isPending
+              isValid && !submitMutation.isPending
                 ? 'bg-kwestly-green/10 text-kwestly-green border-kwestly-green hover:bg-kwestly-green/20'
                 : 'bg-secondary text-muted-foreground border-border cursor-not-allowed'
             }`}
           >
-            {submitQuest.isPending ? (
-              <Loader2 className="w-6 h-6 animate-spin mx-auto" />
-            ) : (
-              'SUBMIT WORK 🚀'
-            )}
+            {submitMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 'SUBMIT WORK 🚀'}
           </motion.button>
         </div>
       </div>

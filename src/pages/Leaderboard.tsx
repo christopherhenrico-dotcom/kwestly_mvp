@@ -3,27 +3,20 @@ import { motion } from 'framer-motion';
 import TopNav from '@/components/layout/TopNav';
 import AppSidebar from '@/components/layout/AppSidebar';
 import { Loader2 } from 'lucide-react';
-import leaderboardService, { LeaderboardEntry } from '@/services/leaderboardService';
-
-const rankColors: Record<number, string> = {
-  1: 'text-kwestly-gold glow-gold',
-  2: 'text-gray-300',
-  3: 'text-orange-400',
-};
+import api from '@/services/api';
 
 const Leaderboard: FC = () => {
   const [tab, setTab] = useState<'score' | 'earnings'>('score');
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const data = tab === 'score'
-          ? await leaderboardService.getTopByScore()
-          : await leaderboardService.getTopByEarnings();
-        setEntries(data);
+        const sort = tab === 'score' ? 'execution_score' : 'total_earned';
+        const data = await api.getLeaderboard(sort);
+        setUsers(data);
       } catch (error) {
         console.error('Failed to fetch leaderboard:', error);
       } finally {
@@ -33,15 +26,19 @@ const Leaderboard: FC = () => {
     fetchData();
   }, [tab]);
 
+  const rankColors: Record<number, string> = {
+    1: 'text-kwestly-gold',
+    2: 'text-gray-300',
+    3: 'text-orange-400',
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="flex">
         <AppSidebar />
         <main className="flex-1 p-6">
-          <h1 className="font-display text-2xl font-bold uppercase tracking-tighter text-foreground mb-6">
-            Leaderboard
-          </h1>
+          <h1 className="font-display text-2xl font-bold uppercase tracking-tighter text-foreground mb-6">Leaderboard</h1>
 
           <div className="flex gap-2 mb-6">
             {(['score', 'earnings'] as const).map(t => (
@@ -62,41 +59,36 @@ const Leaderboard: FC = () => {
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : (
-            <div className="border border-border">
-              <div className="grid grid-cols-5 gap-4 px-6 py-3 border-b border-border font-mono text-xs text-muted-foreground uppercase">
+            <div className="glass-card">
+              <div className="grid grid-cols-5 gap-4 px-6 py-3 border-b border-border/30 font-mono text-xs text-muted-foreground uppercase">
                 <span>Rank</span>
                 <span className="col-span-2">User</span>
                 <span>{tab === 'score' ? 'Score' : 'Earned'}</span>
                 <span>Quests</span>
               </div>
 
-              {entries.map((entry, i) => (
+              {users.map((user, i) => (
                 <motion.div
-                  key={entry.user.id}
+                  key={user.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.05 }}
-                  className={`grid grid-cols-5 gap-4 px-6 py-4 border-b border-border last:border-0 font-mono text-sm ${
-                    i < 3 ? 'bg-card' : ''
-                  }`}
+                  className={`grid grid-cols-5 gap-4 px-6 py-4 border-b border-border/30 last:border-0 font-mono text-sm ${i < 3 ? 'bg-white/5' : ''}`}
                 >
-                  <span className={`font-bold ${rankColors[i + 1] || 'text-muted-foreground'}`}>
-                    #{i + 1}
+                  <span className={`font-bold ${rankColors[i + 1] || 'text-muted-foreground'}`}>#{i + 1}</span>
+                  <span className="col-span-2 text-foreground font-medium flex items-center gap-2">
+                    {user.avatar_url && <img src={user.avatar_url} alt="" className="w-6 h-6 rounded-full" />}
+                    {user.name || user.github_username || 'Anonymous'}
                   </span>
-                  <span className="col-span-2 text-foreground font-medium">
-                    {entry.user.name || entry.user.github_username || entry.user.email?.split('@')[0] || 'Anonymous'}
+                  <span className={tab === 'score' ? 'text-primary' : 'text-kwestly-green'}>
+                    {tab === 'score' ? user.execution_score : `$${user.total_earned}`}
                   </span>
-                  <span className={tab === 'score' ? 'text-kwestly-purple' : 'text-kwestly-green'}>
-                    {tab === 'score' ? entry.score : `$${entry.earned}`}
-                  </span>
-                  <span className="text-muted-foreground">{entry.questsCompleted}</span>
+                  <span className="text-muted-foreground">{user.quests_completed}</span>
                 </motion.div>
               ))}
 
-              {entries.length === 0 && (
-                <div className="text-center py-10 font-mono text-muted-foreground">
-                  No data yet.
-                </div>
+              {users.length === 0 && (
+                <div className="text-center py-10 font-mono text-muted-foreground">No data yet.</div>
               )}
             </div>
           )}

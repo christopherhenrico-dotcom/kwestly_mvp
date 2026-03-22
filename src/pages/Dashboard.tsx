@@ -4,12 +4,14 @@ import AppSidebar from '@/components/layout/AppSidebar';
 import FilterBar from '@/components/quest/FilterBar';
 import QuestCard from '@/components/quest/QuestCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useOpenQuests } from '@/hooks/useQuests';
-import { transformQuest } from '@/stores/appStore';
+import { useQuery } from '@tanstack/react-query';
+import api from '@/services/api';
 
 const Dashboard: FC = () => {
-  const { data: quests = [], isLoading } = useOpenQuests();
-  const displayQuests = quests.map(transformQuest);
+  const { data: quests = [], isLoading } = useQuery({
+    queryKey: ['quests', 'open'],
+    queryFn: () => api.getQuests({ status: 'open' }),
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -22,7 +24,7 @@ const Dashboard: FC = () => {
               Quest Terminal
             </h1>
             <p className="font-mono text-sm text-muted-foreground mt-1">
-              {isLoading ? 'Loading...' : `${displayQuests.length} quests available`}
+              {isLoading ? 'Loading...' : `${quests.length} quests available`}
             </p>
           </div>
 
@@ -31,7 +33,7 @@ const Dashboard: FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {isLoading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="border bg-card p-6">
+                <div key={i} className="glass-card p-6">
                   <div className="flex items-center justify-between mb-4">
                     <Skeleton className="h-6 w-20" />
                     <Skeleton className="h-6 w-16" />
@@ -45,14 +47,14 @@ const Dashboard: FC = () => {
                 </div>
               ))
             ) : (
-              displayQuests.map((quest, i) => (
-                <QuestCard key={quest.id} quest={quest} index={i} />
+              quests.map((quest: any, i: number) => (
+                <QuestCard key={quest.id} quest={{ ...quest, status: quest.status }} index={i} />
               ))
             )}
           </div>
 
-          {!isLoading && displayQuests.length === 0 && (
-            <div className="text-center py-20 font-mono text-muted-foreground">
+          {!isLoading && quests.length === 0 && (
+            <div className="text-center py-20 font-mono text-muted-foreground glass-card">
               No open quests available. Check back soon.
             </div>
           )}

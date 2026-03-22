@@ -3,27 +3,38 @@ import TopNav from '@/components/layout/TopNav';
 import AppSidebar from '@/components/layout/AppSidebar';
 import QuestCard from '@/components/quest/QuestCard';
 import { Loader2 } from 'lucide-react';
-import { useActiveQuests } from '@/hooks/useQuests';
-import { useQuests } from '@/hooks/useQuests';
-import { transformQuest } from '@/stores/appStore';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import api from '@/services/api';
 
 const tabs = [
   { key: 'active', label: 'IN PROGRESS' },
   { key: 'submitted', label: 'SUBMITTED' },
   { key: 'completed', label: 'COMPLETED' },
-  { key: 'failed', label: 'FAILED' },
+  { key: 'open', label: 'POSTED' },
 ];
 
 const MyQuests: FC = () => {
   const [activeTab, setActiveTab] = useState('active');
-  const { data: activeData = [], isLoading: activeLoading } = useActiveQuests();
-  const { data: allData = [], isLoading: allLoading } = useQuests();
+  const { user } = useAuth();
 
-  const isLoading = activeLoading || allLoading;
-  
-  const allQuests = [...activeData, ...allData];
-  const transformed = allQuests.map(transformQuest);
-  const filtered = transformed.filter(q => q.status === activeTab);
+  const { data: workerQuests = [], isLoading: workerLoading } = useQuery({
+    queryKey: ['my-quests', 'worker'],
+    queryFn: () => api.getQuests({ worker_id: user?.id }),
+    enabled: !!user?.id,
+  });
+
+  const { data: posterQuests = [], isLoading: posterLoading } = useQuery({
+    queryKey: ['my-quests', 'poster'],
+    queryFn: () => api.getQuests(),
+    enabled: !!user?.id,
+  });
+
+  const isLoading = workerLoading || posterLoading;
+
+  const filteredQuests = activeTab === 'open' 
+    ? posterQuests.filter((q: any) => q.poster_id === user?.id)
+    : workerQuests.filter((q: any) => q.status === activeTab);
 
   return (
     <div className="min-h-screen bg-background">
@@ -31,9 +42,7 @@ const MyQuests: FC = () => {
       <div className="flex">
         <AppSidebar />
         <main className="flex-1 p-6">
-          <h1 className="font-display text-2xl font-bold uppercase tracking-tighter text-foreground mb-6">
-            My Quests
-          </h1>
+          <h1 className="font-display text-2xl font-bold uppercase tracking-tighter text-foreground mb-6">My Quests</h1>
 
           <div className="flex gap-2 mb-6">
             {tabs.map(tab => (
@@ -57,14 +66,14 @@ const MyQuests: FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filtered.map((quest, i) => (
-                <QuestCard key={quest.id} quest={quest} index={i} showStatus />
+              {filteredQuests.map((quest: any, i: number) => (
+                <QuestCard key={quest.id} quest={{ ...quest, status: quest.status }} index={i} showStatus />
               ))}
             </div>
           )}
 
-          {!isLoading && filtered.length === 0 && (
-            <div className="text-center py-20 font-mono text-muted-foreground">
+          {!isLoading && filteredQuests.length === 0 && (
+            <div className="text-center py-20 font-mono text-muted-foreground glass-card">
               {activeTab === 'active' ? 'No active quests. Hit the Terminal to grab one.' : `No ${activeTab} quests.`}
             </div>
           )}

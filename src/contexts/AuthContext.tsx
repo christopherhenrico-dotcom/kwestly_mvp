@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import pb from '@/services/pocketbase';
+import api from '@/services/api';
 import type { User } from '@/types';
 
 interface AuthContextType {
@@ -9,6 +9,7 @@ interface AuthContextType {
   loginWithGithub: () => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,69 +19,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const initAuth = () => {
-      if (pb.authStore.isValid && pb.authStore.record) {
-        setUser(pb.authStore.record as unknown as User);
+    const initAuth = async () => {
+      const token = api.getToken();
+      if (token) {
+        try {
+          const userData = await api.getMe();
+          setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
+        } catch {
+          api.logout();
+        }
+      } else {
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          setUser(JSON.parse(savedUser));
+        }
       }
       setIsLoading(false);
     };
 
     initAuth();
-
-    const unsubscribe = pb.authStore.onChange((token, record) => {
-      if (token && record) {
-        setUser(record as unknown as User);
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => unsubscribe();
   }, []);
 
-  const loginWithGithub = useCallback(async () => {
-    try {
-      const authData = await pb.collection('users').listAuthMethods();
-      const githubProvider = authData.oauth2?.providers.find(p => p.name === 'github');
-      
-      if (!githubProvider) {
-        console.error('GitHub OAuth provider not configured');
-        alert('GitHub OAuth is not configured. Please contact support.');
-        return;
-      }
-
-      const redirectUrl = `${window.location.origin}/auth/callback`;
-      const state = githubProvider.state;
-      const codeVerifier = githubProvider.codeVerifier;
-      
-      const authUrl = new URL(githubProvider.authURL);
-      authUrl.searchParams.set('redirect_uri', redirectUrl);
-      authUrl.searchParams.set('state', state);
-      authUrl.searchParams.set('code_challenge', githubProvider.codeChallenge);
-      authUrl.searchParams.set('code_challenge_method', githubProvider.codeChallengeMethod);
-      
-      window.location.href = authUrl.toString();
-    } catch (error) {
-      console.error('OAuth error:', error);
-      alert('Failed to start GitHub login. Please try again.');
-    }
+  const loginWithGithub = useCallback(() => {
+    api.githubLogin();
   }, []);
 
   const logout = useCallback(() => {
-    pb.authStore.clear();
+    api.logout();
     setUser(null);
   }, []);
 
   const refreshUser = useCallback(async () => {
-    if (pb.authStore.isValid) {
-      try {
-        await pb.collection('users').authRefresh();
-      } catch (error) {
-        console.error('Failed to refresh auth:', error);
-        logout();
-      }
+    try {
+      const userData = await api.getMe();
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch {
+      logout();
     }
   }, [logout]);
+
+  const updateUser = useCallback((updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -91,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginWithGithub,
         logout,
         refreshUser,
+        updateUser,
       }}
     >
       {children}
