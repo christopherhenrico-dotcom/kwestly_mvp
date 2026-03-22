@@ -1,60 +1,82 @@
 import { FC } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Swords, Trophy, User, Settings, LogOut, Shield } from 'lucide-react';
-import { useQuestStore, useAuthStore } from '@/stores/appStore';
+import { LayoutDashboard, Swords, Trophy, User, Shield, DollarSign, Hexagon } from 'lucide-react';
+import { useQuestStore } from '@/stores/appStore';
+import { useAuth } from '@/contexts/AuthContext';
+import pb from '@/services/pocketbase';
 
 const navItems = [
   { label: 'Terminal', path: '/dashboard', icon: LayoutDashboard },
-  { label: 'My Quests', path: '/my-quests', icon: Swords, badge: true },
+  { label: 'My Quests', path: '/my-quests', icon: Swords },
+  { label: 'Transactions', path: '/transactions', icon: DollarSign },
   { label: 'Leaderboard', path: '/leaderboard', icon: Trophy },
   { label: 'Profile', path: '/profile', icon: User },
-  { label: 'Admin', path: '/admin', icon: Shield },
 ];
 
 const AppSidebar: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const activeCount = useQuestStore(s => s.activeQuests.length);
-  const logout = useAuthStore(s => s.logout);
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    pb.authStore.clear();
+    logout();
+    navigate('/');
+  };
 
   return (
-    <aside className="w-56 border-r border-border bg-card min-h-[calc(100vh-3.5rem)] flex flex-col relative">
-      {/* Gradient accent line */}
-      <div className="absolute top-0 right-0 w-px h-full opacity-10"
-        style={{ background: 'linear-gradient(to bottom, hsl(182 100% 50%), transparent)' }} />
+    <aside className="w-56 glass shrink-0 min-h-[calc(100vh-3.5rem)] flex flex-col m-3 rounded-lg">
+      <div className="flex items-center gap-2 p-4 border-b border-border/30">
+        <Hexagon className="w-6 h-6 text-primary" fill="currentColor" />
+        <span className="font-display text-sm font-bold text-foreground">MENU</span>
+      </div>
 
-      <nav className="flex-1 py-4 px-3 space-y-1">
+      <nav className="flex-1 py-3 px-3 space-y-1">
         {navItems.map(item => {
           const active = location.pathname === item.path;
           return (
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-mono transition-all duration-200 ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-mono transition-all duration-200 rounded-md ${
                 active
-                  ? 'bg-primary/10 text-primary border-l-2 border-primary'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary border-l-2 border-transparent'
+                  ? 'bg-primary/15 text-primary border border-primary/30'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent'
               }`}
             >
               <item.icon className="w-4 h-4" strokeWidth={1.5} />
               <span>{item.label}</span>
-              {item.badge && activeCount > 0 && (
-                <span className="ml-auto bg-kwestly-cyan/20 text-kwestly-cyan text-xs font-bold px-1.5 py-0.5">
+              {item.path === '/my-quests' && activeCount > 0 && (
+                <span className="ml-auto bg-primary/20 text-primary text-xs font-bold px-1.5 py-0.5 rounded">
                   {activeCount}
                 </span>
               )}
             </button>
           );
         })}
+
+        <div className="pt-3 mt-3 border-t border-border/30">
+          <button
+            onClick={() => navigate('/admin')}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-mono transition-all duration-200 rounded-md ${
+              location.pathname === '/admin'
+                ? 'bg-accent-purple/15 text-accent-purple border border-accent-purple/30'
+                : 'text-muted-foreground hover:text-foreground hover:bg-white/5 border border-transparent'
+            }`}
+          >
+            <Shield className="w-4 h-4" strokeWidth={1.5} />
+            <span>Admin Panel</span>
+          </button>
+        </div>
       </nav>
 
-      <div className="p-3 border-t border-border">
+      <div className="p-3 border-t border-border/30">
         <button
-          onClick={() => { logout(); navigate('/'); }}
-          className="w-full flex items-center gap-3 px-3 py-2 text-sm font-mono text-muted-foreground hover:text-kwestly-red transition-colors"
+          onClick={() => navigate('/settings')}
+          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-mono text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-white/5"
         >
-          <LogOut className="w-4 h-4" strokeWidth={1.5} />
-          <span>Logout</span>
+          Settings
         </button>
       </div>
     </aside>
