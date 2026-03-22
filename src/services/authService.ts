@@ -39,9 +39,10 @@ export const authService = {
   },
 
   loginWithGithub(): void {
-    const redirectUrl = `${window.location.origin}/auth/callback`;
-    const callbackUrl = `${import.meta.env.VITE_POCKETBASE_URL}/api/auth/providers/github?redirectTo=${encodeURIComponent(redirectUrl)}`;
-    window.location.href = callbackUrl;
+    pb.collection('users').authWithOAuth2({
+      provider: 'github',
+      redirectTo: `${window.location.origin}/auth/callback`,
+    });
   },
 
   async refreshUser(): Promise<User | null> {

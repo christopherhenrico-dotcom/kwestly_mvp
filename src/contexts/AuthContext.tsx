@@ -38,11 +38,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, []);
 
-  const loginWithGithub = useCallback(() => {
-    const redirectUrl = `${window.location.origin}/auth/callback`;
-    
-    const callbackUrl = `${import.meta.env.VITE_POCKETBASE_URL}/api/auth/providers/github?redirectTo=${encodeURIComponent(redirectUrl)}`;
-    window.location.href = callbackUrl;
+  const loginWithGithub = useCallback(async () => {
+    try {
+      const authData = await pb.collection('users').listAuthMethods();
+      const githubProvider = authData.oauth2?.providers.find(p => p.name === 'github');
+      
+      if (!githubProvider) {
+        console.error('GitHub OAuth provider not configured');
+        alert('GitHub OAuth is not configured. Please contact support.');
+        return;
+      }
+
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+      const state = githubProvider.state;
+      const codeVerifier = githubProvider.codeVerifier;
+      
+      const authUrl = new URL(githubProvider.authURL);
+      authUrl.searchParams.set('redirect_uri', redirectUrl);
+      authUrl.searchParams.set('state', state);
+      authUrl.searchParams.set('code_challenge', githubProvider.codeChallenge);
+      authUrl.searchParams.set('code_challenge_method', githubProvider.codeChallengeMethod);
+      
+      window.location.href = authUrl.toString();
+    } catch (error) {
+      console.error('OAuth error:', error);
+      alert('Failed to start GitHub login. Please try again.');
+    }
   }, []);
 
   const logout = useCallback(() => {
