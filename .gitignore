@@ -38,3 +38,19 @@ pb_data/*.shm
 # PocketBase exclusions
 !pb_data/pb_migrations/
 !pb_data/pb_hooks/
+
+# Environment variables (NEVER commit these)
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Payment worker secrets
+kwestly-backend/payment_worker/.env
+
+# Credentials and keys
+*.pem
+*.key
+credentials.json
+secrets.json
+*.secret
