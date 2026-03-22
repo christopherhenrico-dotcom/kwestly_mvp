@@ -42,8 +42,10 @@ pb_data/*.shm
 # Environment variables (NEVER commit these)
 .env
 .env.local
+.env.development
 .env.production
 .env.*.local
+.env.*.production
 
 # Payment worker secrets
 kwestly-backend/payment_worker/.env

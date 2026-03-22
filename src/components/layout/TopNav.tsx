@@ -30,15 +30,11 @@ const TopNav: FC = () => {
         className="flex items-center gap-2 cursor-pointer shrink-0" 
         onClick={() => navigate('/')}
       >
-        <motion.div
-          whileHover={{ rotate: 180 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Hexagon className="w-8 h-8 text-primary" fill="currentColor" />
-        </motion.div>
-        <span className="font-cyber text-lg font-bold text-foreground hidden md:block tracking-wider">
-          KWESTLY
-        </span>
+        <img 
+          src="/logo_nobg.png" 
+          alt="Kwestly" 
+          className="h-10 w-auto object-contain"
+        />
       </div>
 
       {/* Search - Desktop */}

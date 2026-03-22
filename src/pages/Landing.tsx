@@ -22,15 +22,12 @@ const Landing: FC = () => {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
     loadQuests();
     
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isAuthenticated]);
+  }, []);
 
   const loadQuests = async () => {
     try {
@@ -157,15 +154,11 @@ const Landing: FC = () => {
             className="flex items-center gap-2 cursor-pointer" 
             onClick={() => navigate('/')}
           >
-            <motion.div
-              whileHover={{ rotate: 180 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Hexagon className="w-9 h-9 text-primary neon-flicker" fill="currentColor" />
-            </motion.div>
-            <span className="font-cyber text-xl font-bold text-foreground tracking-wider">
-              KWESTLY
-            </span>
+            <img 
+              src="/logo_nobg.png" 
+              alt="Kwestly" 
+              className="h-10 w-auto object-contain"
+            />
           </div>
 
           <div className="hidden md:flex items-center gap-8">
@@ -519,7 +512,11 @@ const Landing: FC = () => {
           ) : (
             <div className="glass-card p-12 text-center">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Hexagon className="w-8 h-8 text-primary" />
+                <img 
+                  src="/logo_nobg.png" 
+                  alt="Kwestly" 
+                  className="w-10 h-10 object-contain"
+                />
               </div>
               <h3 className="font-display text-xl font-bold text-foreground mb-2">
                 No Active Quests
@@ -584,8 +581,11 @@ const Landing: FC = () => {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Hexagon className="w-8 h-8 text-primary" fill="currentColor" />
-                <span className="font-cyber text-lg font-bold text-foreground tracking-wider">KWESTLY</span>
+                <img 
+                  src="/logo_nobg.png" 
+                  alt="Kwestly" 
+                  className="h-8 w-auto object-contain"
+                />
               </div>
               <p className="font-mono text-sm text-muted-foreground leading-relaxed">
                 The P2P Side Quest platform for developers who ship.
@@ -646,7 +646,7 @@ const Landing: FC = () => {
           
           <div className="pt-8 border-t border-border/30 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="font-mono text-xs text-muted-foreground">
-              © 2024 Kwestly, Inc. All rights reserved.
+              © 2026 Kwestly, Inc. All rights reserved.
             </p>
             <p className="font-mono text-xs text-muted-foreground flex items-center gap-2">
               <Lock className="w-3 h-3" />

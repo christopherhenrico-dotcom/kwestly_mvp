@@ -35,8 +35,11 @@ const AppSidebar: FC = () => {
       <div className="p-4">
         <div className="glass-card p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Hexagon className="w-5 h-5 text-primary" fill="currentColor" />
-            <span className="font-cyber text-xs font-bold text-primary tracking-wider">KWESTLY</span>
+            <img 
+              src="/logo_nobg.png" 
+              alt="Kwestly" 
+              className="h-6 w-auto object-contain"
+            />
           </div>
           <p className="font-mono text-[10px] text-muted-foreground">Mission Control</p>
         </div>
