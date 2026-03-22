@@ -3,16 +3,25 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import TopNav from '@/components/layout/TopNav';
-import { useQuestStore } from '@/stores/appStore';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useQuest } from '@/hooks/useQuests';
+import { useSubmitQuest } from '@/hooks/useQuests';
 
 const Submit: FC = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { activeQuests, submitQuest } = useQuestStore();
-  const quest = activeQuests.find(q => q.id === id);
+  const { data: quest, isLoading: questLoading } = useQuest(id!);
+  const submitQuest = useSubmitQuest();
   const [prLink, setPrLink] = useState('');
   const [notes, setNotes] = useState('');
+
+  if (questLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!quest) {
     return (
@@ -26,9 +35,18 @@ const Submit: FC = () => {
 
   const handleSubmit = () => {
     if (!id || !isValid) return;
-    submitQuest(id);
-    confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors: ['#39ff14', '#00f5ff'] });
-    setTimeout(() => navigate('/my-quests'), 1500);
+    submitQuest.mutate(
+      { questId: id, data: { submission_url: prLink, submission_notes: notes } },
+      {
+        onSuccess: () => {
+          confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 }, colors: ['#39ff14', '#00f5ff'] });
+          setTimeout(() => navigate('/my-quests'), 1500);
+        },
+        onError: (error) => {
+          console.error('Failed to submit:', error);
+        },
+      }
+    );
   };
 
   return (
@@ -73,14 +91,18 @@ const Submit: FC = () => {
             whileHover={isValid ? { scale: 1.01 } : {}}
             whileTap={isValid ? { scale: 0.98 } : {}}
             onClick={handleSubmit}
-            disabled={!isValid}
+            disabled={!isValid || submitQuest.isPending}
             className={`w-full py-4 font-mono font-bold text-lg border-2 transition-all ${
-              isValid
+              isValid && !submitQuest.isPending
                 ? 'bg-kwestly-green/10 text-kwestly-green border-kwestly-green hover:bg-kwestly-green/20'
                 : 'bg-secondary text-muted-foreground border-border cursor-not-allowed'
             }`}
           >
-            SUBMIT WORK 🚀
+            {submitQuest.isPending ? (
+              <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+            ) : (
+              'SUBMIT WORK 🚀'
+            )}
           </motion.button>
         </div>
       </div>

@@ -15,7 +15,20 @@ const achievements = [
 const Profile: FC = () => {
   const user = useAuthStore(s => s.user);
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center font-mono text-muted-foreground">
+        Loading profile...
+      </div>
+    );
+  }
+
+  const displayName = user.username || user.email?.split('@')[0] || 'User';
+  const initials = displayName.slice(0, 2).toUpperCase();
+  const executionScore = user.executionScore || 0;
+  const questsCompleted = user.questsCompleted || 0;
+  const successRate = user.successRate || 0;
+  const totalEarned = user.totalEarned || 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -23,26 +36,24 @@ const Profile: FC = () => {
       <div className="flex">
         <AppSidebar />
         <main className="flex-1 p-6">
-          {/* Header */}
           <div className="flex items-center gap-6 mb-10">
             <div className="w-20 h-20 bg-secondary border border-border flex items-center justify-center font-mono text-2xl text-muted-foreground">
-              {user.username.slice(0, 2).toUpperCase()}
+              {initials}
             </div>
             <div>
-              <h1 className="font-display text-2xl font-bold text-foreground">{user.username}</h1>
-              <p className="font-mono text-sm text-muted-foreground">Developer • Joined 2026</p>
+              <h1 className="font-display text-2xl font-bold text-foreground">{displayName}</h1>
+              <p className="font-mono text-sm text-muted-foreground">Developer</p>
             </div>
             <div className="ml-auto">
-              <ExecutionScoreBadge score={user.executionScore} size="large" />
+              <ExecutionScoreBadge score={executionScore} size="large" />
             </div>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-3 gap-6 mb-10">
             {[
-              { label: 'Quests Completed', value: user.questsCompleted, icon: Zap, color: 'text-kwestly-cyan' },
-              { label: 'Success Rate', value: `${user.successRate}%`, icon: Trophy, color: 'text-kwestly-green' },
-              { label: 'Total Earned', value: `$${user.totalEarned}`, icon: DollarSign, color: 'text-kwestly-gold' },
+              { label: 'Quests Completed', value: questsCompleted, icon: Zap, color: 'text-kwestly-cyan' },
+              { label: 'Success Rate', value: `${successRate}%`, icon: Trophy, color: 'text-kwestly-green' },
+              { label: 'Total Earned', value: `$${totalEarned.toLocaleString()}`, icon: DollarSign, color: 'text-kwestly-gold' },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -58,7 +69,6 @@ const Profile: FC = () => {
             ))}
           </div>
 
-          {/* Achievements */}
           <h2 className="font-display text-xl font-bold uppercase tracking-tighter text-foreground mb-4">Achievements</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {achievements.map((a, i) => (

@@ -1,7 +1,7 @@
 import { FC, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Github, Code2, Wallet, Zap, Loader2 } from 'lucide-react';
+import { Github, Code2, Wallet, Loader2 } from 'lucide-react';
 import QuestCard from '@/components/quest/QuestCard';
 import { questService, authService } from '@/services';
 import { useAuthStore, transformQuest } from '@/stores/appStore';
@@ -38,7 +38,6 @@ const Landing: FC = () => {
       await authService.loginWithGithub();
     } catch (err) {
       console.error('Login failed:', err);
-      navigate('/dashboard');
     } finally {
       setLoggingIn(false);
     }

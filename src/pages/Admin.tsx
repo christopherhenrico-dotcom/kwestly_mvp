@@ -1,7 +1,9 @@
 import { FC, useState } from 'react';
 import TopNav from '@/components/layout/TopNav';
 import AppSidebar from '@/components/layout/AppSidebar';
-import { useQuestStore } from '@/stores/appStore';
+import { Loader2 } from 'lucide-react';
+import { useCreateQuest, useQuests, useUpdateQuest } from '@/hooks/useQuests';
+import pb from '@/services/pocketbase';
 
 const Admin: FC = () => {
   const [tab, setTab] = useState<'post' | 'review'>('post');
@@ -12,11 +14,58 @@ const Admin: FC = () => {
   const [timeLimit, setTimeLimit] = useState('4');
   const [minScore, setMinScore] = useState('100');
 
-  const submissions = useQuestStore(s => s.activeQuests.filter(q => q.status === 'submitted'));
+  const createQuest = useCreateQuest();
+  const updateQuest = useUpdateQuest();
+  const { data: allQuests = [] } = useQuests();
+  
+  const submittedQuests = allQuests.filter(q => q.status === 'submitted');
 
   const handlePublish = () => {
-    alert(`Quest "${title}" published! (Mock)`);
-    setTitle(''); setDescription(''); setBounty('');
+    if (!title || !bounty) return;
+    
+    createQuest.mutate(
+      {
+        title,
+        description,
+        bounty: parseFloat(bounty),
+        difficulty: difficulty as 'easy' | 'medium' | 'hard' | 'elite',
+        ttl_hours: parseInt(timeLimit) || 4,
+        min_score: parseInt(minScore) || 100,
+        status: 'open',
+        poster_id: pb.authStore.record?.id || '',
+      },
+      {
+        onSuccess: () => {
+          setTitle('');
+          setDescription('');
+          setBounty('');
+          setDifficulty('easy');
+          setTimeLimit('4');
+          setMinScore('100');
+        },
+        onError: (error) => {
+          console.error('Failed to create quest:', error);
+        },
+      }
+    );
+  };
+
+  const handleApprove = (questId: string) => {
+    updateQuest.mutate(
+      { id: questId, data: { status: 'completed' } },
+      {
+        onError: (error) => console.error('Failed to approve:', error),
+      }
+    );
+  };
+
+  const handleReject = (questId: string) => {
+    updateQuest.mutate(
+      { id: questId, data: { status: 'failed' } },
+      {
+        onError: (error) => console.error('Failed to reject:', error),
+      }
+    );
   };
 
   return (
@@ -45,35 +94,62 @@ const Admin: FC = () => {
 
           {tab === 'post' ? (
             <div className="max-w-xl space-y-4">
-              {[
-                { label: 'Title', value: title, set: setTitle, type: 'text' },
-                { label: 'Bounty (USDC)', value: bounty, set: setBounty, type: 'number' },
-                { label: 'Time Limit (hours)', value: timeLimit, set: setTimeLimit, type: 'number' },
-                { label: 'Min Score Required', value: minScore, set: setMinScore, type: 'number' },
-              ].map(field => (
-                <div key={field.label}>
-                  <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider mb-2 block">{field.label}</label>
+              <div>
+                <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Title</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder="Quest title..."
+                  className="w-full bg-secondary border border-border px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Bounty (USDC)</label>
                   <input
-                    type={field.type}
-                    value={field.value}
-                    onChange={e => field.set(e.target.value)}
+                    type="number"
+                    value={bounty}
+                    onChange={e => setBounty(e.target.value)}
+                    placeholder="100"
+                    className="w-full bg-secondary border border-border px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Difficulty</label>
+                  <select
+                    value={difficulty}
+                    onChange={e => setDifficulty(e.target.value)}
+                    className="w-full bg-secondary border border-border px-4 py-3 font-mono text-sm text-foreground focus:outline-none focus:border-primary"
+                  >
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                    <option value="elite">Elite</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Time Limit (hours)</label>
+                  <input
+                    type="number"
+                    value={timeLimit}
+                    onChange={e => setTimeLimit(e.target.value)}
                     className="w-full bg-secondary border border-border px-4 py-3 font-mono text-sm text-foreground focus:outline-none focus:border-primary transition-colors"
                   />
                 </div>
-              ))}
-
-              <div>
-                <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Difficulty</label>
-                <select
-                  value={difficulty}
-                  onChange={e => setDifficulty(e.target.value)}
-                  className="w-full bg-secondary border border-border px-4 py-3 font-mono text-sm text-foreground focus:outline-none focus:border-primary"
-                >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                  <option value="elite">Elite</option>
-                </select>
+                <div>
+                  <label className="font-mono text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Min Score</label>
+                  <input
+                    type="number"
+                    value={minScore}
+                    onChange={e => setMinScore(e.target.value)}
+                    className="w-full bg-secondary border border-border px-4 py-3 font-mono text-sm text-foreground focus:outline-none focus:border-primary transition-colors"
+                  />
+                </div>
               </div>
 
               <div>
@@ -82,38 +158,49 @@ const Admin: FC = () => {
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   rows={6}
-                  className="w-full bg-secondary border border-border px-4 py-3 font-mono text-sm text-foreground focus:outline-none focus:border-primary resize-none"
+                  placeholder="Describe the quest requirements..."
+                  className="w-full bg-secondary border border-border px-4 py-3 font-mono text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary resize-none"
                 />
               </div>
 
               <button
                 onClick={handlePublish}
-                disabled={!title || !bounty}
+                disabled={!title || !bounty || createQuest.isPending}
                 className={`w-full py-4 font-mono font-bold text-lg border-2 transition-all ${
-                  title && bounty
+                  title && bounty && !createQuest.isPending
                     ? 'bg-primary text-primary-foreground border-primary glow-cyan'
                     : 'bg-secondary text-muted-foreground border-border cursor-not-allowed'
                 }`}
               >
-                PUBLISH QUEST
+                {createQuest.isPending ? <Loader2 className="w-6 h-6 animate-spin mx-auto" /> : 'PUBLISH QUEST'}
               </button>
             </div>
           ) : (
             <div className="space-y-4">
-              {submissions.length === 0 && (
+              {submittedQuests.length === 0 && (
                 <p className="font-mono text-sm text-muted-foreground py-10 text-center">No pending submissions.</p>
               )}
-              {submissions.map(sub => (
-                <div key={sub.id} className="border border-border bg-card p-4 flex items-center justify-between">
+              {submittedQuests.map(quest => (
+                <div key={quest.id} className="border border-border bg-card p-4 flex items-center justify-between">
                   <div>
-                    <p className="font-mono text-sm text-foreground font-bold">{sub.title}</p>
-                    <p className="font-mono text-xs text-muted-foreground">${sub.bounty} USDC</p>
+                    <p className="font-mono text-sm text-foreground font-bold">{quest.title}</p>
+                    <p className="font-mono text-xs text-muted-foreground">
+                      ${quest.bounty} USDC • {quest.submission_url || 'No PR link'}
+                    </p>
                   </div>
                   <div className="flex gap-2">
-                    <button className="px-4 py-2 font-mono text-xs font-bold border border-kwestly-green text-kwestly-green hover:bg-kwestly-green/10 transition-colors">
+                    <button
+                      onClick={() => handleApprove(quest.id)}
+                      disabled={updateQuest.isPending}
+                      className="px-4 py-2 font-mono text-xs font-bold border border-kwestly-green text-kwestly-green hover:bg-kwestly-green/10 transition-colors disabled:opacity-50"
+                    >
                       APPROVE
                     </button>
-                    <button className="px-4 py-2 font-mono text-xs font-bold border border-kwestly-red text-kwestly-red hover:bg-kwestly-red/10 transition-colors">
+                    <button
+                      onClick={() => handleReject(quest.id)}
+                      disabled={updateQuest.isPending}
+                      className="px-4 py-2 font-mono text-xs font-bold border border-kwestly-red text-kwestly-red hover:bg-kwestly-red/10 transition-colors disabled:opacity-50"
+                    >
                       REJECT
                     </button>
                   </div>

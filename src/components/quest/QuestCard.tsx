@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import DifficultyBadge from './DifficultyBadge';
 import CountdownTimer from './CountdownTimer';
- import type { Quest } from '@/types';
+import type { DisplayQuest } from '@/stores/appStore';
 
 interface QuestCardProps {
-  quest: Quest;
+  quest: DisplayQuest;
   index?: number;
   showStatus?: boolean;
 }
@@ -35,10 +35,8 @@ const QuestCard: FC<QuestCardProps> = ({ quest, index = 0, showStatus }) => {
         status ? status.color : 'border-border'
       }`}
     >
-      {/* Scanline effect */}
       <div className="scanline absolute inset-0 pointer-events-none overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity" />
 
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <DifficultyBadge difficulty={quest.difficulty} />
         {showStatus && status && (
@@ -48,17 +46,14 @@ const QuestCard: FC<QuestCardProps> = ({ quest, index = 0, showStatus }) => {
         )}
       </div>
 
-      {/* Title */}
       <h3 className="font-display font-bold text-lg text-foreground mb-2 leading-tight">
         {quest.title}
       </h3>
 
-      {/* Bounty */}
       <div className="font-mono text-2xl font-bold text-kwestly-cyan text-glow-cyan mb-4">
         ${quest.bounty} <span className="text-sm text-muted-foreground">USDC</span>
       </div>
 
-      {/* Footer */}
       <div className="flex items-center justify-between text-sm">
         <CountdownTimer endTime={quest.endTime} />
         <span className="font-mono text-muted-foreground">
@@ -66,7 +61,6 @@ const QuestCard: FC<QuestCardProps> = ({ quest, index = 0, showStatus }) => {
         </span>
       </div>
 
-      {/* Grab CTA hint */}
       <div className="mt-4 pt-4 border-t border-border opacity-0 group-hover:opacity-100 transition-opacity">
         <span className="font-mono text-xs text-primary tracking-wider">
           GRAB QUEST →
