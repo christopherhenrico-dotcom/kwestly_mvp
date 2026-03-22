@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ClerkLoaded, ClerkLoading } from "@clerk/react";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ProtectedAdminRoute } from "@/components/auth/ProtectedAdminRoute";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import QuestDetail from "./pages/QuestDetail";
@@ -50,15 +52,53 @@ const App = () => (
               <Route path="/sign-up" element={<SignUpPage />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/quest/:id" element={<QuestDetail />} />
-              <Route path="/quest/:id/submit" element={<Submit />} />
-              <Route path="/my-quests" element={<MyQuests />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/transactions" element={<Transactions />} />
+              
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/quest/:id" element={
+                <ProtectedRoute>
+                  <QuestDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/quest/:id/submit" element={
+                <ProtectedRoute>
+                  <Submit />
+                </ProtectedRoute>
+              } />
+              <Route path="/my-quests" element={
+                <ProtectedRoute>
+                  <MyQuests />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } />
+              <Route path="/leaderboard" element={
+                <ProtectedRoute>
+                  <Leaderboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } />
+              <Route path="/transactions" element={
+                <ProtectedRoute>
+                  <Transactions />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin" element={
+                <ProtectedAdminRoute>
+                  <Admin />
+                </ProtectedAdminRoute>
+              } />
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </ClerkLoaded>

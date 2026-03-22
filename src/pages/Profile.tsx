@@ -1,19 +1,15 @@
 import { FC } from 'react';
 import { motion } from 'framer-motion';
+import { Trophy, Zap, DollarSign, Github, Star, GitPullRequest, Code, Users, Loader2 } from 'lucide-react';
 import TopNav from '@/components/layout/TopNav';
 import AppSidebar from '@/components/layout/AppSidebar';
 import ExecutionScoreBadge from '@/components/user/ExecutionScoreBadge';
 import { useAuth } from '@/contexts/AuthContext';
-import { Trophy, Zap, DollarSign, Award, Lock } from 'lucide-react';
-
-const achievements = [
-  { title: 'First Quest', desc: 'Complete your first quest', unlocked: true, icon: Zap },
-  { title: 'Speed Demon', desc: '3 Quests in 24h', unlocked: false, icon: Trophy },
-  { title: 'Elite Status', desc: 'Score 1000+', unlocked: false, icon: Award },
-];
+import { useExecutionScore } from '@/hooks/useExecutionScore';
 
 const Profile: FC = () => {
   const { user } = useAuth();
+  const { score, activity, loading, error } = useExecutionScore();
 
   if (!user) {
     return (
@@ -25,7 +21,7 @@ const Profile: FC = () => {
 
   const displayName = user.name || user.github_username || user.email?.split('@')[0] || 'User';
   const initials = displayName.slice(0, 2).toUpperCase();
-  const executionScore = user.execution_score || 0;
+  const executionScore = score?.totalScore || user.execution_score || 0;
   const questsCompleted = user.quests_completed || 0;
   const totalEarned = user.total_earned || 0;
 
@@ -36,11 +32,30 @@ const Profile: FC = () => {
         <AppSidebar />
         <main className="flex-1 p-6">
           <div className="flex items-center gap-6 mb-10">
-            <div className="w-20 h-20 bg-secondary border border-border flex items-center justify-center font-mono text-2xl text-muted-foreground">
-              {initials}
-            </div>
+            {user.avatar_url ? (
+              <img
+                src={user.avatar_url}
+                alt={displayName}
+                className="w-20 h-20 rounded-full border border-border object-cover"
+              />
+            ) : (
+              <div className="w-20 h-20 bg-secondary border border-border flex items-center justify-center font-mono text-2xl text-muted-foreground">
+                {initials}
+              </div>
+            )}
             <div>
               <h1 className="font-display text-2xl font-bold text-foreground">{displayName}</h1>
+              {user.github_username && (
+                <a
+                  href={`https://github.com/${user.github_username}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-sm text-primary hover:text-primary/80 flex items-center gap-1 mt-1"
+                >
+                  <Github className="w-4 h-4" />
+                  @{user.github_username}
+                </a>
+              )}
               <p className="font-mono text-sm text-muted-foreground">Developer</p>
             </div>
             <div className="ml-auto">
@@ -68,22 +83,111 @@ const Profile: FC = () => {
             ))}
           </div>
 
-          <h2 className="font-display text-xl font-bold uppercase tracking-tighter text-foreground mb-4">Achievements</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {achievements.map((a) => (
-              <div key={a.title} className={`border p-4 ${a.unlocked ? 'border-kwestly-gold bg-kwestly-gold/5' : 'border-border bg-card opacity-50'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  {a.unlocked ? <a.icon className="w-4 h-4 text-kwestly-gold" strokeWidth={1.5} /> : <Lock className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />}
-                  <span className="font-mono text-sm font-bold text-foreground">{a.title}</span>
-                </div>
-                <p className="font-mono text-xs text-muted-foreground">{a.desc}</p>
+          <h2 className="font-display text-xl font-bold uppercase tracking-tighter text-foreground mb-4">GitHub Stats</h2>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : error ? (
+            <div className="text-center py-8 font-mono text-sm text-muted-foreground border border-border">
+              {error}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <StatCard
+                icon={Code}
+                label="Commits"
+                value={activity?.commits || 0}
+                points={score?.breakdown.commits || 0}
+                color="text-primary"
+              />
+              <StatCard
+                icon={GitPullRequest}
+                label="PRs Merged"
+                value={activity?.prsMerged || 0}
+                points={score?.breakdown.prsMerged || 0}
+                color="text-kwestly-green"
+              />
+              <StatCard
+                icon={Users}
+                label="Followers"
+                value={activity?.followers || 0}
+                points={Math.round((activity?.followers || 0) * 2)}
+                color="text-accent-purple"
+              />
+              <StatCard
+                icon={Star}
+                label="Stars Earned"
+                value={activity?.stars || 0}
+                points={Math.round((activity?.stars || 0) * 0.5)}
+                color="text-kwestly-gold"
+              />
+            </div>
+          )}
+
+          <h2 className="font-display text-xl font-bold uppercase tracking-tighter text-foreground mb-4">Score Breakdown</h2>
+          {score && (
+            <div className="border border-border bg-card p-6 mb-8">
+              <div className="space-y-4">
+                <ScoreBar label="Commits" value={score.breakdown.commits} max={2000} color="bg-primary" />
+                <ScoreBar label="Pull Requests" value={score.breakdown.prsMerged} max={1500} color="bg-kwestly-green" />
+                <ScoreBar label="Repositories" value={score.breakdown.repos} max={500} color="bg-accent-purple" />
+                <ScoreBar label="Reviews" value={score.breakdown.reviews} max={800} color="bg-kwestly-gold" />
+                <ScoreBar label="Engagement" value={score.breakdown.engagement} max={1000} color="bg-kwestly-cyan" />
               </div>
-            ))}
-          </div>
+              <div className="mt-6 pt-6 border-t border-border flex justify-between items-center">
+                <span className="font-mono text-lg font-bold text-foreground">Total Score</span>
+                <span className="font-mono text-2xl font-bold text-primary">{score.totalScore}</span>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>
   );
 };
+
+interface StatCardProps {
+  icon: React.ElementType;
+  label: string;
+  value: number;
+  points: number;
+  color: string;
+}
+
+function StatCard({ icon: Icon, label, value, points, color }: StatCardProps) {
+  return (
+    <div className="border border-border bg-card p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className={`w-4 h-4 ${color}`} strokeWidth={1.5} />
+        <span className="font-mono text-xs text-muted-foreground">{label}</span>
+      </div>
+      <div className={`font-mono text-2xl font-bold ${color}`}>{value}</div>
+      <div className="font-mono text-xs text-muted-foreground">+{points} points</div>
+    </div>
+  );
+}
+
+interface ScoreBarProps {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+}
+
+function ScoreBar({ label, value, max, color }: ScoreBarProps) {
+  const percentage = Math.min((value / max) * 100, 100);
+  return (
+    <div>
+      <div className="flex justify-between mb-1">
+        <span className="font-mono text-xs text-muted-foreground">{label}</span>
+        <span className="font-mono text-xs text-foreground">{value}</span>
+      </div>
+      <div className="h-2 bg-secondary rounded-full overflow-hidden">
+        <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${percentage}%` }} />
+      </div>
+    </div>
+  );
+}
 
 export default Profile;
