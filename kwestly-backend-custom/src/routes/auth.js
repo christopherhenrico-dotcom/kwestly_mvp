@@ -11,7 +11,7 @@ const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 const JWT_SECRET = process.env.JWT_SECRET || 'kwestly-super-secret-jwt-key-change-in-production';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
-const API_URL = process.env.API_URL || 'http://localhost:3000';
+const API_URL = process.env.API_URL || 'https://kwestly.up.railway.app';
 
 router.use(cookieParser());
 
