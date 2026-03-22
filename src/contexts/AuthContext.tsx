@@ -41,12 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGithub = useCallback(() => {
     const redirectUrl = `${window.location.origin}/auth/callback`;
     
-    pb.collection('users').authWithOAuth2({
-      provider: 'github',
-      redirectTo: redirectUrl,
-    }).catch((error) => {
-      console.error('OAuth login failed:', error);
-    });
+    const callbackUrl = `${import.meta.env.VITE_POCKETBASE_URL}/api/auth/providers/github?redirectTo=${encodeURIComponent(redirectUrl)}`;
+    window.location.href = callbackUrl;
   }, []);
 
   const logout = useCallback(() => {

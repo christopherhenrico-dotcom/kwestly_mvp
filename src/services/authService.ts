@@ -38,24 +38,21 @@ export const authService = {
     await pb.collection('users').requestPasswordReset(email);
   },
 
-  async loginWithGithub(): Promise<void> {
+  loginWithGithub(): void {
     const redirectUrl = `${window.location.origin}/auth/callback`;
-    
-    try {
-      await pb.collection('users').authWithOAuth2({
-        provider: 'github',
-        redirectTo: redirectUrl,
-      });
-    } catch (error) {
-      console.error('GitHub OAuth error:', error);
-      throw error;
-    }
+    const callbackUrl = `${import.meta.env.VITE_POCKETBASE_URL}/api/auth/providers/github?redirectTo=${encodeURIComponent(redirectUrl)}`;
+    window.location.href = callbackUrl;
   },
 
   async refreshUser(): Promise<User | null> {
     if (!this.isAuthenticated()) return null;
-    const result = await pb.collection('users').authRefresh();
-    return result.record as unknown as User;
+    try {
+      const result = await pb.collection('users').authRefresh();
+      return result.record as unknown as User;
+    } catch {
+      this.logout();
+      return null;
+    }
   },
 
   async updateProfile(userId: string, data: Partial<User>): Promise<User> {
