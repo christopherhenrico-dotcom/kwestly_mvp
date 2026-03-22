@@ -86,7 +86,7 @@ export function useReviewSubmission() {
       rejectionReason,
     }: {
       submissionId: string;
-      status: SubmissionStatus;
+      status: 'approved' | 'rejected';
       rejectionReason?: string;
     }) => submissionService.reviewSubmission(submissionId, status, rejectionReason),
     onSuccess: () => {

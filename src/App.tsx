@@ -17,6 +17,8 @@ import Settings from "./pages/Settings";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Transactions from "./pages/Transactions";
+import SignInPage from "./pages/SignIn";
+import SignUpPage from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -44,6 +46,8 @@ const App = () => (
           <ClerkLoaded>
             <Routes>
               <Route path="/" element={<Landing />} />
+              <Route path="/sign-in" element={<SignInPage />} />
+              <Route path="/sign-up" element={<SignUpPage />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/dashboard" element={<Dashboard />} />
