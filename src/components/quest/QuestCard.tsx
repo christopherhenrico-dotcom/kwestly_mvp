@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import DifficultyBadge from './DifficultyBadge';
 import CountdownTimer from './CountdownTimer';
-import type { Quest } from '@/workspaces/kwestly_mvp/src/services/questService.ts';
+ import type { Quest } from '@/types';
 
 interface QuestCardProps {
   quest: Quest;
